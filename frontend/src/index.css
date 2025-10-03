@@ -1,7 +1,8 @@
+@import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "flyonui/src/vendor/datatables.css";
+/*@import "flyonui/src/vendor/datatables.css"; */
 
 /* reset básico para centrar */
 html, body, #root {

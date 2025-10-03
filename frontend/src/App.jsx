@@ -2,6 +2,8 @@ import { useState } from "react";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import RegistrarSeguimiento from "./pages/RegistrarSeguimiento.jsx";
+import './index.css';
+import './App.css';
 
 function App() {
   const [screen, setScreen] = useState("login");
