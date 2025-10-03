@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset mínimo y limpio */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* Opcional: Si quieres mantener algunos de tus estilos personalizados */
+button {
+  font-family: inherit;
+}
+
+/* Elimina los estilos que conflictuan */
