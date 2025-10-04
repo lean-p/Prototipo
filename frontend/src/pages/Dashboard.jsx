@@ -36,8 +36,7 @@ export default function Dashboard({ onRegistrar }) {
       <div className="flex-1 p-6 flex flex-col">
         {/* Título fuera de la caja */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Mis Seguimientos</h1>
-          <p className="text-gray-600">Gestiona y realiza el seguimiento de tus envíos</p>
+          <h1 className="text-2xl font-poppins text-gray-800">Mis Seguimientos</h1>
         </div>
 
         {total > 0 ? (

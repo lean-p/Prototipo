@@ -7,9 +7,11 @@
 @source "./node_modules/flyonui/flyonui.js";
 @import "flyonui/src/vendor/datatables.css";
 
+
 /* reset básico para centrar */
 html, body, #root {
   height: 100%;
+  width: 100%;
   margin: 0;      /* ⚡ esto elimina el margen por defecto */
   padding: 0;
 }
@@ -43,6 +45,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
 /*  display: flex; 
   align-items: center;     /* ⚡ centra vertical */
 /*  justify-content: center;  /*⚡ centra horizontal */

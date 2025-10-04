@@ -56,7 +56,7 @@ export default function Login({ onLogin }) {
             <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-xl">📦</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Sistema de Gestión de Cargas</h1>
+            <h1 className="text-2xl font-poppins text-gray-800">Sistema de Gestión de Cargas</h1>
           </div>
           
           {/* Subtítulo */}

@@ -23,8 +23,7 @@ export default function RegistrarSeguimiento({ onBack }) {
       <div className="flex-1 p-6 flex flex-col">
         {/* Título fuera de la caja */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Registrar Seguimiento</h1>
-          <p className="text-gray-600">Agrega un nuevo número de tracking para realizar el seguimiento</p>
+          <h1 className="text-2xl font-poppins text-gray-800">Registrar Seguimiento</h1>
         </div>
 
         {/* Contenedor para centrar la caja */}
