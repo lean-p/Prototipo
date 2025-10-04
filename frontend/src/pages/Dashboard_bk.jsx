@@ -29,16 +29,12 @@ export default function Dashboard({ onRegistrar }) {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Barra lateral con logo */}
+      {/* Barra lateral de navegación - Full Height */}
       <ContextMenu />
 
       {/* Contenido principal */}
-      <div className="flex-1 p-6 flex flex-col">
-        {/* Título fuera de la caja */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Mis Seguimientos</h1>
-          <p className="text-gray-600">Gestiona y realiza el seguimiento de tus envíos</p>
-        </div>
+      <div className="flex-1 p-6 overflow-auto">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Mis Seguimientos</h1>
 
         {total > 0 ? (
           <>
@@ -59,33 +55,26 @@ export default function Dashboard({ onRegistrar }) {
             </div>
 
             {/* Tabla con DataTables */}
-            <div className="bg-white shadow rounded-xl overflow-hidden p-4 text-black mb-6">
+            <div className="bg-white shadow rounded-xl overflow-hidden p-4 text-black">
               <Seguimientos seguimientos={seguimientos} />
             </div>
-
-            {/* Botón centrado */}
-            <div className="flex justify-center">
-              <button
-                onClick={onRegistrar}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
-              >
-                Registrar Seguimiento
-              </button>
-            </div>
+            <button
+              onClick={onRegistrar}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition mt-8"
+            >
+              Registrar Seguimiento
+            </button>
           </>
         ) : (
-          /* Caso sin seguimientos - centrado */
-          <div className="flex-1 flex flex-col items-center justify-center">
+          /* Caso sin seguimientos */
+          <div className="flex flex-col items-center justify-center mt-20">
             <Package className="w-20 h-20 text-gray-400 mb-4" />
-            <p className="text-lg text-gray-600 mb-2 text-center">
+            <p className="text-lg text-gray-600 mb-2">
               Aún no tenés seguimientos cargados
-            </p>
-            <p className="text-gray-500 text-sm mb-6 text-center">
-              Comienza registrando tu primer número de tracking
             </p>
             <button
               onClick={onRegistrar}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Registrar Seguimiento
             </button>
@@ -95,3 +84,4 @@ export default function Dashboard({ onRegistrar }) {
     </div>
   );
 }
+
