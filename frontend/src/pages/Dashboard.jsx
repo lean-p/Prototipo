@@ -49,9 +49,15 @@ export default function Dashboard({ onRegistrar }) {
           </div>
 
           {/* Tabla con DataTables */}
-          <div className="bg-white shadow rounded-xl overflow-hidden p-4">
+          <div className="bg-white shadow rounded-xl overflow-hidden p-4 text-black">
             <Seguimientos seguimientos={seguimientos} />
           </div>
+          <button
+            onClick={onRegistrar}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition mt-8"
+          >
+            Registrar Seguimiento
+          </button>
         </>
       ) : (
         /* Caso sin seguimientos */
