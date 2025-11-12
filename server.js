@@ -1,5 +1,5 @@
 // server.js
-require('dotenv').config({ path: 'config.env' }); // ¡LÍNEA 1!
+require('dotenv').config({ path: 'config.env' });
 const express = require('express');
 const cors = require('cors');
 const db = require('./src/model/index');
@@ -20,7 +20,6 @@ const app = express();
 
 
 // --- Middlewares Esenciales ---
-// (Estos se ejecutan en cada petición)
 app.use(cors({
     origin: 'http://localhost:5173', // Tu puerto de React
     credentials: true
