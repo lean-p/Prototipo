@@ -1,27 +1,71 @@
 import { useState } from "react";
+const API_URL = "http://localhost:3000/api/auth";
 
 export default function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     email: "",
+    nombre: "",
+    apellido: "",
     password: "",
     confirmPassword: ""
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { // 👈 HACER ESTA FUNCIÓN ASÍNCRONA
     e.preventDefault();
-    
-    if (isRegister && formData.password !== formData.confirmPassword) {
-      alert("Las contraseñas no coinciden");
-      return;
-    }
-    
-    if (!formData.email || !formData.password) {
-      alert("Por favor completa todos los campos");
-      return;
-    }
+    setError(null); // Limpiar errores anteriores
 
-    onLogin();
+    // 1. Validaciones básicas del frontend (Confirmar Contraseña)
+    if (isRegister && formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+    
+    // 2. Determinar el endpoint y los datos a enviar
+    const endpoint = isRegister ? `${API_URL}/register` : `${API_URL}/login`;
+    
+    // Datos de la petición: Solo enviamos lo que el endpoint necesita
+    const dataToSend = isRegister 
+      ? { email: formData.email, password: formData.password, nombre: formData.nombre, apellido: formData.apellido }
+      : { email: formData.email, password: formData.password };
+
+    // 3. Llamada a la API del backend (Node.js/Express)
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSend),
+        credentials: 'include'
+      });
+
+      // 4. Manejo de la Respuesta
+      const responseData = await response.json();
+
+      if (response.ok) { // Código 200, 201 (Éxito)
+        alert(isRegister ? "Registro exitoso. ¡Inicia sesión!" : "Ingreso exitoso!");
+        // Aquí debes guardar el token de sesión (JWT) en el localStorage si lo usas
+        // y luego llamar a la función que cambia la vista principal:
+        localStorage.setItem('token', responseData.token);
+        onLogin(responseData);
+      } else { 
+//        const errorData = await response.json();
+        // Código 400, 401, 409, 500 (Fallo)
+        // El backend devuelve el mensaje de error en responseData.message
+        // Captura errores de validación, clave débil, o email ya registrado.
+        const errorMessage = responseData.message || responseData.mensaje || "Error desconocido en el servidor.";
+       // setError(responseData.mensaje || "Ocurrió un error desconocido.");
+        setError(errorMessage);
+        console.error(`Fallo del Backend (${response.status}):`, errorMessage);
+      }
+
+    } catch (networkError) {
+      // Manejo de errores de red (servidor caído, CORS no configurado)
+      setError("Error de conexión. ¿Está el servidor de backend iniciado?");
+      console.error("Network Error:", networkError);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -35,6 +79,8 @@ export default function Login({ onLogin }) {
   const resetForm = () => {
     setFormData({
       email: "",
+      nombre: "",
+      apellido: "",
       password: "",
       confirmPassword: ""
     });
@@ -87,6 +133,40 @@ export default function Login({ onLogin }) {
               required
             />
           </div>
+
+        {isRegister && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre
+            </label>
+            <input
+              type="nombre"
+              name="nombre"
+              value={formData.nombre}
+              onChange={handleInputChange}
+              placeholder="Carlos"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-900 bg-white"
+              required
+            />
+          </div>
+        )}
+
+          {isRegister && (
+            <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Apellido
+            </label>
+            <input
+              type="apellido"
+              name="apellido"
+              value={formData.apellido}
+              onChange={handleInputChange}
+              placeholder="Perez"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-900 bg-white"
+              required
+            />
+          </div>
+          )}
 
           {/* Campo Contraseña */}
           <div>

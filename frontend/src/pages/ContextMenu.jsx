@@ -1,42 +1,43 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
-export default function ContextMenu() {
+
+export default function ContextMenu({ currentUser, onLogout}) {
   const [activeItem, setActiveItem] = useState("Mis Seguimientos");
-
+  const navigate = useNavigate();
   const menuItems = [
     {
       id: "cuenta",
       label: "Mi Cuenta", 
       icon: "👤",
-      action: () => console.log("Navegar a Mi Cuenta")
+      path: "usuario"
     },
     {
       id: "dashboard",
       label: "Dashboard",
       icon: "📊",
-      action: () => console.log("Navegar a Dashboard")
+      path: "dashboard"
     },
     {
       id: "seguimientos",
       label: "Seguimientos",
       icon: "📦",
-      action: () => console.log("Navegar a Mis Seguimientos")
-    },
-    {
-      id: "reportes", 
-      label: "Reportes",
-      icon: "📊",
-      action: () => console.log("Navegar a Mis Reportes")
+      path: "seguimientos"
     }
   ];
 
   const handleItemClick = (item) => {
     setActiveItem(item.label);
-    item.action();
+    navigate(item.path);
   };
 
+  const nombreCompleto = currentUser.usuario
+        ? `${currentUser.usuario.nombre || ''} ${currentUser.usuario.apellido || ''}`.trim()
+        : 'Cargando Usuario';
+  const emailUsuario = currentUser.usuario ? currentUser.usuario.user : 'No autenticado';
+
   return (
-    <div className="h-screen bg-white shadow-xl border-r border-gray-200 p-6 flex flex-col">
+    <div className="min-h-screen bg-white shadow-xl border-r border-gray-200 p-6 flex flex-col">
       {/* Header de la barra lateral - Con imagen/logo */}
       <div className="mb-8">
         <div className="flex flex-col items-center gap-3 mb-4">
@@ -73,9 +74,12 @@ export default function ContextMenu() {
       {/* Footer en la parte inferior */}
       <div className="pt-6 border-t border-gray-200">
         <div className="text-center">
-          <p className="text-sm text-gray-600 font-medium">Usuario Actual</p>
-          <p className="text-xs text-gray-500 mt-1">admin@sistema.com</p>
-          <button className="mt-4 w-full text-sm text-white hover:text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition">
+          <p className="text-sm text-gray-600 font-medium">{nombreCompleto}</p>
+          <p className="text-xs text-gray-500 mt-1">{emailUsuario}</p>
+          <button 
+            onClick={onLogout}
+            className="mt-4 w-full text-sm text-white hover:text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition"
+            >
             Cerrar Sesión
           </button>
         </div>

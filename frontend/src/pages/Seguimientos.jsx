@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import $ from "jquery";
 import "datatables.net";
+import { Link } from 'react-router-dom';
+import MenuAcciones from './MenuAcciones';
 
-export default function Seguimientos({ seguimientos }) {
+export default function Seguimientos({ seguimientos, currentUser, onRefreshData }) {
   const tableRef = useRef(null);
 
   useEffect(() => {
@@ -11,6 +13,9 @@ export default function Seguimientos({ seguimientos }) {
       searching: true,
       info: false,
       responsive: true,
+      columnDefs: [
+        { targets: 5, orderable: false, searchable: false } 
+      ]
     });
 
     return () => {
@@ -27,16 +32,35 @@ export default function Seguimientos({ seguimientos }) {
           <th>Ubicación</th>
           <th>Estado</th>
           <th>Último evento</th>
+          <th className="text-right">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {seguimientos.map((s) => (
-          <tr key={s.id}>
-            <td>{s.tracking}</td>
-            <td>{s.transportista}</td>
-            <td>{s.ubicacion}</td>
+          <tr key={s.idSeguimiento}>
+            <td><Link 
+                to={`/seguimiento/${s.idSeguimiento}`} 
+                className="text-blue-600 hover:underline font-medium"
+                state={{ 
+                  estado: s.estado, 
+                  transportista: s.transportista.nombre,
+                }}
+              >
+                {s.nro_tracking}
+              </Link>
+            </td>
+            <td>{s.transportista.nombre}</td>
+            <td>{s.ubicacionActual}</td>
             <td>{s.estado}</td>
-            <td>{s.fecha}</td>
+            <td>{new Date(s.fechaInicio).toLocaleDateString('es-AR')}</td>
+            <td className="text-right">
+                <MenuAcciones 
+                    currentUser={currentUser} // Pasa el prop hacia abajo
+                    seguimiento={s}         // Pasa el seguimiento actual
+                    onUploadSuccess={onRefreshData} // Pasa la función de refresco
+                    onDeleteSuccess={onRefreshData} // Pasa la misma función
+                />
+            </td>
           </tr>
         ))}
       </tbody>

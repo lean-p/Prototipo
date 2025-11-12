@@ -1,0 +1,20 @@
+
+# VARIABLES DE ENTORNO
+config.env
+.env
+.env.*
+
+# DEPENDENCIAS
+node_modules/
+
+# LOGS Y ARCHIVOS TEMPORALES
+*.log
+npm-debug.log*
+
+# ARCHIVOS DE REPORTES TEMPORALES
+
+temp/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
