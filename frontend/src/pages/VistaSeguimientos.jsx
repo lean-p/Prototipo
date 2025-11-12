@@ -1,4 +1,3 @@
-// 1. Importamos useState, useEffect, y useCallback
 import { useState, useEffect, useCallback } from "react"; 
 import { Package } from "lucide-react";
 import Seguimientos from "./Seguimientos";
@@ -7,29 +6,24 @@ import { Link, Outlet, useNavigate, useOutletContext} from 'react-router-dom';
 import Notificacion from "./notificacion";
 import MenuAcciones from './MenuAcciones';
 
-// 2. Definimos la constante de la API
-//const API_URL = "http://localhost:3000/api/tracks";
 
 export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }) {
-  // 3. Tus estados
+
   const { setTitle } = useOutletContext();
   const [seguimientos, setSeguimientos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [status, setStatus] = useState({ success: null, error: null, loading: false });
     const navigate = useNavigate();
-    // --- ¡NUEVOS ESTADOS DE PAGINACIÓN! ---
-    const [page, setPage] = useState(1);       // Página actual
-    const [totalPages, setTotalPages] = useState(1); // Total de páginas
+    const [page, setPage] = useState(1);       
+    const [totalPages, setTotalPages] = useState(1); 
     const [totalSeguimientos, setTotalSeguimientos] = useState(0);
 
     useEffect(() => {
         setTitle('Mis Seguimientos');
     }, [setTitle]);
 
-    // 4. El código corregido
     const fetchSeguimientos = useCallback(async () => {
-        // Esta lógica de 'token' es solo una validación previa, está bien.
         const token = currentUser?.token; 
         if (!token) {
             setStatus({ loading: false, error: "Error de autenticación." });
@@ -42,33 +36,23 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
         setError(null);
 
         try {
-            // --- ¡AQUÍ ESTÁ LA SOLUCIÓN! ---
-            
-            // 1. Usamos la RUTA RELATIVA.
-            //    (El proxy de Vite en vite.config.js la interceptará)
             const url = `/api/tracks/listTracks?page=${page}`;
 
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 2. BORRAMOS el header 'Authorization'.
                 },
-                // 3. AÑADIMOS 'credentials: include'
-                //    Esto le dice a Vite que envíe la cookie 'auth_token'.
                 credentials: 'include', 
             });
-            // --- FIN DE LA SOLUCIÓN ---
             
             if (!response.ok) {
-                // (Si 'verificarSesion' falla, caerá aquí)
                 throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
             
-            const data = await response.json(); // data = { total: 14, seguimientos: [...] }
+            const data = await response.json();
 
             const seguimientosTraducidos = data.seguimientos.map(seguimiento => {
-                // ... (tu lógica de switch/case está perfecta) ...
                 let estadoTraducido = seguimiento.estadoActual; 
                 switch (seguimiento.estadoActual) {
                   case "transit":
@@ -92,12 +76,8 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
             setLoading(false);
             setStatus(s => ({ ...s, loading: false }));
         }
-
-    // ¡'page' es la dependencia clave aquí!
     }, [currentUser, page]); 
-    // (Ya no es necesario pasar todos los 'set...')
 
-    // 6. El 'useEffect' ahora es simple
     useEffect(() => {
         fetchSeguimientos();
     }, [fetchSeguimientos]);
@@ -112,7 +92,6 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
     }
 
     try {
-      // ✅ --- CORRECCIÓN: Apunta al endpoint correcto ---
       const response = await fetch('http://localhost:3000/api/info/reporte', { 
         method: 'GET',
         headers: {
@@ -154,12 +133,12 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
     }
   };
 
-   // Tu lógica de 'total', 'enTransito', 'arribados' (sin cambios)
+   // Traduccion de los estados de seguimiento para que sean legibles por el usuario
    const total = seguimientos.length;
    const enTransito = seguimientos.filter((s) => s.estado === "En tránsito").length;
    const arribados = seguimientos.filter((s) => s.estado === "Arribado").length;
 
-   // Renderizado de Carga y Error (sin cambios)
+
   if (loading) {
      return <div className="min-h-screen flex items-center justify-center">Cargando datos...</div>;
    }
@@ -168,14 +147,12 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
      return <div className="min-h-screen flex items-center justify-center">Error al cargar los seguimientos: {error.message}</div>;
    }
 
-   // --- RENDERIZADO DEL COMPONENTE (con el cambio) ---
    return (
      <div className="min-h-screen bg-gray-100 flex">
 
         <div className="flex-1 p-6 flex flex-col">
         {total > 0 ? (
           <>
-            {/* Resumen (sin cambios) */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-white shadow rounded-xl p-4 text-center">
                 <p className="text-gray-500">Total</p>
@@ -190,8 +167,6 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
                 <p className="text-2xl font-bold text-green-600">{arribados}</p>
               </div>
               </div>
-
-            {/* 7. EL CAMBIO FINAL */}
             <div className="bg-white shadow rounded-xl p-4 text-black mb-6">
               <Seguimientos 
                   seguimientos={seguimientos} 
@@ -202,7 +177,7 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
             <div className="flex justify-center items-center gap-4 mt-2">
                         <button 
                             onClick={() => setPage(p => p - 1)}
-                            disabled={page <= 1} // Deshabilitado en pág 1
+                            disabled={page <= 1}
                             className="... (estilos de tu app) disabled:opacity-50"
                         >
                             Anterior
@@ -214,14 +189,12 @@ export default function VistaSeguimientos({ currentUser, onLogout, onRegistrar }
 
                         <button 
                             onClick={() => setPage(p => p + 1)}
-                            disabled={page >= totalPages} // Deshabilitado en la última pág
+                            disabled={page >= totalPages}
                             className="... (estilos de tu app) disabled:opacity-50"
                         >
                             Siguiente
                         </button>
                     </div>
-
-            {/* Botones (sin cambios) */}
             <div className="flex justify-center mt-6">
               <button onClick={() => navigate('/registrar')}>
                 Registrar Seguimiento

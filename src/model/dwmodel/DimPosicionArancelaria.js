@@ -9,7 +9,7 @@ module.exports = (sequelize) => {
     },
     posicionArancelaria: {
       type: DataTypes.STRING(100),
-      allowNull: true // Asumiendo que puede ser null
+      allowNull: true
     }
   }, {
     tableName: 'dimPosicionArancelaria',

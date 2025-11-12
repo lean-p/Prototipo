@@ -1,23 +1,23 @@
 import React, { useState, useRef } from 'react';
-import { MoreVertical, UploadCloud, Trash2 } from 'lucide-react'; // Importamos iconos
+import { MoreVertical, UploadCloud, Trash2 } from 'lucide-react';
+
+//Este componente define las acciones del boton "3 puntos" sobre un seguimiento. Permite cargar documento y eliminar el seguimiento
 
 export default function MenuAcciones({ currentUser, seguimiento, onUploadSuccess, onDeleteSuccess }) {
   const [isOpen, setIsOpen] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const fileInputRef = useRef(null);
 
-  // --- Lógica de Habilitación (Tu idea del botón grisado) ---
-  // ⚠️ ¡IMPORTANTE! Cambia 'arribado' por el string exacto de tu DB
+  // Se habilita el boton de carga de docuemnto, si encuentra en estado delivered
   const estadoRequerido = 'delivered'; 
   const estaHabilitado = seguimiento.estadoActual === estadoRequerido;
 
-  // --- Función de Subida ---
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     setSubiendo(true);
-    setIsOpen(false); // Cierra el menú
+    setIsOpen(false);
     const token = currentUser?.token; 
 
     const formData = new FormData();
@@ -36,7 +36,7 @@ export default function MenuAcciones({ currentUser, seguimiento, onUploadSuccess
         }
 
         alert('Documento procesado y guardado.');
-        if (onUploadSuccess) onUploadSuccess(); // Llama al "refresco"
+        if (onUploadSuccess) onUploadSuccess();
 
     } catch (err) {
         alert(`Error: ${err.message}`);
@@ -46,11 +46,10 @@ export default function MenuAcciones({ currentUser, seguimiento, onUploadSuccess
     }
   };
 
-  // --- Función de Borrado ---
   const handleDelete = async () => {
-    setIsOpen(false); // Cierra el menú
+    setIsOpen(false);
     
-    // ¡Confirmación SIEMPRE!
+    // Solicita confirmacion al momento de eliminar un seguimiento
     if (!window.confirm(`¿Estás seguro de que quieres eliminar el seguimiento "${seguimiento.nro_tracking}"? Esta acción no se puede deshacer.`)) {
         return;
     }
@@ -69,7 +68,7 @@ export default function MenuAcciones({ currentUser, seguimiento, onUploadSuccess
         }
 
         alert('Seguimiento eliminado.');
-        if (onDeleteSuccess) onDeleteSuccess(); // Llama al "refresco"
+        if (onDeleteSuccess) onDeleteSuccess();
 
     } catch (err) {
         alert(`Error: ${err.message}`);
@@ -78,7 +77,6 @@ export default function MenuAcciones({ currentUser, seguimiento, onUploadSuccess
 
   return (
     <div className="relative">
-      {/* El input de archivo real, oculto */}
       <input 
           type="file" 
           accept=".pdf"
@@ -86,19 +84,14 @@ export default function MenuAcciones({ currentUser, seguimiento, onUploadSuccess
           onChange={handleFileChange}
           style={{ display: 'none' }} 
       />
-
-      {/* Botón de 3 puntitos */}
       <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-full hover:bg-gray-200">
         <MoreVertical size={20} />
       </button>
-
-      {/* El Menú Desplegable */}
       {isOpen && (
         <div 
             className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border"
-            onMouseLeave={() => setIsOpen(false)} // Opcional: se cierra al quitar el mouse
+            onMouseLeave={() => setIsOpen(false)}
         >
-          {/* 1. Opción Subir Documento */}
           <button
             onClick={() => fileInputRef.current.click()}
             disabled={!estaHabilitado || subiendo}
@@ -112,8 +105,6 @@ export default function MenuAcciones({ currentUser, seguimiento, onUploadSuccess
             <UploadCloud size={16} className="mr-3" />
             {subiendo ? 'Procesando...' : 'Subir Documento'}
           </button>
-
-          {/* 2. Opción Eliminar */}
           <button
             onClick={handleDelete}
             className="flex items-center w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100 mt-2"

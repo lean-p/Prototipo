@@ -7,7 +7,7 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    vendedor: { // Considera renombrar a nombreVendedor
+    vendedor: {
       type: DataTypes.STRING(100),
       allowNull: true
     }

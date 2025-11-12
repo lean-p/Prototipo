@@ -1,6 +1,3 @@
-//const Seguimiento = require('../model/Seguimiento');
-//const Transportista = require('../model/Transportista');
-//const Usuario = require('../model/Usuario');
 const servicioEvento = require('../services/servicioEvento');
 const Tracking = require('../utils/consultarTracking');
 const {Seguimiento, Transportista, Usuario, Evento, Documento, Alerta, sequelize} = require('../model/index');
@@ -9,16 +6,12 @@ const {Op} = require('sequelize');
 exports.obtenerSeguimientoPorID = async (idSeguimiento) => {
 
     const seguimiento = await Seguimiento.findByPk(idSeguimiento, {
-        // 🚨 CLAVE: Usamos 'include' para traer los datos relacionados
         include: [
-            // Incluye Usuario y Transportista (ya definidos)
             { model: Usuario, as: 'usuario', attributes: ['nombre', 'apellido'] },
             { model: Transportista, as: 'transportista', attributes: ['nombre', 'codigo'] },
-            
-            // 🚨 NUEVO: Incluir la lista de Eventos asociados
             { 
                 model: Evento,
-                as: 'eventos', // Usamos el alias 'eventos' definido en Seguimiento.hasMany()
+                as: 'eventos',
             }
         ],
         attributes: { exclude: ['userID_FK', 'idTransportista_FK'] } 
@@ -27,19 +20,17 @@ exports.obtenerSeguimientoPorID = async (idSeguimiento) => {
     if (!seguimiento) {
         throw new Error("Seguimiento no encontrado.");
     }
-    
-    // 2. Resultado: El objeto 'seguimiento' ahora incluye 'seguimiento.usuario.nombre' y 'seguimiento.transportista.nombre'
     return seguimiento;
 
 };
 
-//exports.registrarSeguimiento = async (nro_tracking, transportista, userID) => {
+
 exports.registrarSeguimiento = async (datos) => {
     const { nro_tracking, transportista, userID_FK} = datos;
     
     const idTransportista = await Transportista.findOne({ 
         where: { nombre: transportista },
-        attributes: ['idTransportista'] // Solo traemos el ID
+        attributes: ['idTransportista']
     });
 
     const user = await Usuario.findOne({
@@ -55,7 +46,7 @@ exports.registrarSeguimiento = async (datos) => {
 
         where: {
             nro_tracking: nro_tracking,
-            idTransportista_FK: idTransportista.idTransportista // ✅ Buscamos por el ID numérico
+            idTransportista_FK: idTransportista.idTransportista
         }
 
     });
@@ -64,7 +55,6 @@ exports.registrarSeguimiento = async (datos) => {
 
         console.warn('ALERT: Numero de tracking ya registrado');
         throw new Error (`El tracking '${nro_tracking}' ya se encuentra registrado.`);
-//        return this.obtenerSeguimientoPorID(trackingExistente.idSeguimiento);
     }
 
 
@@ -96,8 +86,7 @@ exports.registrarSeguimiento = async (datos) => {
 
         console.log(`Seguimiento creado con el id ${seguimientoCreado.idSeguimiento}`)
 
-//        if (nuevoSeguimiento.estadoActual === 'delivered') {
-
+        // Mapeo de eventos en DHL
         if (transportista === 'DHL'){
 
             try  {
@@ -131,7 +120,7 @@ exports.registrarSeguimiento = async (datos) => {
             }
 
             return seguimientoCreado
-
+            // Mapeo de eventos en Fedex
         } else if (transportista === 'FedEx') {
 
             try  {
@@ -193,74 +182,25 @@ exports.actualizarSeguimiento = async (idSeguimiento, nuevoEvento) => {
                     }
                 }
         );
-          
-
-    // 3. Devolver el objeto completo (reutilizando el método de lectura)
-    // Esto asegura que la respuesta al frontend esté formateada con los nombres (no solo los IDs)
     return this.obtenerSeguimientoPorID(idSeguimiento);
 }
 
-/*exports.registrarNuevoEvento = async (idSeguimiento, nro_tracking, idTransportista) => {
-
-    try {
-
-        servicioEvento.crearEvento(idSeguimiento, nro_tracking, idTransportista);
-
-    } catch (error) {
-        
-        return error
-
-    }
-}
-
-exports.nuevoScan = async (idSeguimiento, nro_tracking, idTransportista) => {
-
-   const evento = await this.registrarNuevoEvento(idSeguimiento, nro_tracking, idTransportista)
-
-   if (!evento) {
-
-    console.error("ALERT: No se registro un nuevo evento"); 
-    throw new Error ('Evento no registrado');
-
-   }
-
-   const estadoActual = await this.obtenerSeguimientoPorID(idSeguimiento);
-
-   if (!estadoActual) {
-
-    console.error("ALERT: No se pudó obtener el seguimiento");
-    throw new Error ('No se obtuvo el seguimiento');
-
-   }
-
-   if (estadoActual.estadoActual != evento.estado || 
-        estadoActual.descripcion != evento.descripcion || 
-        estadoActual.fechaInicio != evento.fechaHora) {
-
-            this.actualizarSeguimiento(idSeguimiento, evento);
-
-        }
-}*/
 
 exports.obtenerTodosLosSeguimientos = async (userID_FK) => {
     
     const seguimientos = await Seguimiento.findAll({
         where: {
-            userID_FK: userID_FK // 🚨 Filtra por el usuario autenticado
+            userID_FK: userID_FK 
         },
         include: [
-            // Incluimos el transportista para mostrar su nombre
             { 
                 model: Transportista, as: 'transportista', attributes: ['nombre', 'codigo'] 
             },
             { model: Documento, as: 'documento', required: false }
-            // Incluimos los eventos (solo el estado actual, ordenamos por fecha)
+
         ],
-        // Opcional: Ordenar los seguimientos principales por fecha de creación
         order: [['createdAt', 'DESC']]
     });
-
-    // Sequelize devuelve un array de objetos, listo para el frontend
     return seguimientos; 
 };
 
@@ -271,16 +211,13 @@ exports.obtenerTodosLosSeguimientos = async (userID_FK) => {
         const offset = (page - 1) * limit;
 
         try {
-            // Usamos 'findAndCountAll' que es perfecto para esto
             const { count, rows } = await Seguimiento.findAndCountAll({
                 where: { userID_FK: userID },
                 include: [
-                    // Incluimos el transportista para mostrar su nombre
                     { 
                         model: Transportista, as: 'transportista', attributes: ['nombre', 'codigo'] 
                     },
                     { model: Documento, as: 'documento', required: false }
-                    // Incluimos los eventos (solo el estado actual, ordenamos por fecha)
                 ], 
                 order: [['createdAt', 'DESC']],
                 limit: limit,
@@ -289,11 +226,10 @@ exports.obtenerTodosLosSeguimientos = async (userID_FK) => {
 
             const totalPages = Math.ceil(count / limit);
 
-            // Devolvemos el "contrato" completo
             return {
-                total: count,           // ej. 14
-                totalPages: totalPages, // ej. 2
-                seguimientos: rows      // ej. los 10 items de esta página
+                total: count,           
+                totalPages: totalPages, 
+                seguimientos: rows      
             };
 
         } catch (error) {
@@ -333,7 +269,7 @@ exports.obtenerTodosLosSeguimientosActivos = async () => {
             
             const seguimientos = await Seguimiento.findAll({
                 where: {
-                estadoActual: { // Asegúrate que el nombre del campo sea el correcto
+                estadoActual: {
                     [Op.not]: 'delivered'
                 }
                 }
@@ -344,71 +280,57 @@ exports.obtenerTodosLosSeguimientosActivos = async () => {
 
 exports.eliminarSeguimiento = async (idSeguimiento, userID) => {
 
-
+    //Se genera una transaccion para hacer el borrado de los campos en la base
     const t = await sequelize.transaction();
 
     try {
-            // --- PASO DE SEGURIDAD ---
-            // Buscamos el seguimiento Y verificamos que le pertenezca al usuario.
             const seguimiento = await Seguimiento.findOne({ 
                 where: { 
                     idSeguimiento: idSeguimiento, 
-                    userID_FK: userID // ¡Validación de propiedad!
+                    userID_FK: userID
                 },
                 transaction: t
             });
 
-            // Si no se encuentra, o no le pertenece, lanzamos un error
             if (!seguimiento) {
                 throw new Error("Permiso denegado");
             }
-            
-            // --- INICIA EL BORRADO EN CASCADA (TU LÓGICA) ---
-
-            // 3. Buscar todos los Eventos "hijos"
             const eventos = await Evento.findAll({
                 where: { idSeguimiento_FK: idSeguimiento },
-                attributes: ['idEvento'], // Solo necesitamos sus IDs
+                attributes: ['idEvento'],
                 transaction: t
             });
 
             if (eventos.length > 0) {
                 const eventoIDs = eventos.map(e => e.idEvento);
-
-                // 4. Borrar Alertas (los "nietos")
+                //Primero se borran las alertas relacionadas a los eventos del seguimiento
                 await Alerta.destroy({
-                    where: { idEvento_FK: { [Op.in]: eventoIDs } }, // WHERE idEvento IN (1, 2, 3, ...)
+                    where: { idEvento_FK: { [Op.in]: eventoIDs } },
                     transaction: t
                 });
-                
-                // 5. Borrar Eventos (los "hijos")
+                // Se borran los eventos realcionados al seguimiento
                 await Evento.destroy({
                     where: { idSeguimiento_FK: idSeguimiento },
                     transaction: t
                 });
             }
             const idDocumentoABorrar = seguimiento.idDocumento_FK;
-            // 6. Borrar Seguimiento (el "padre")
-            await seguimiento.destroy({ transaction: t }); // Ya lo teníamos cargado
+            // Se borra el seguimiento
+            await seguimiento.destroy({ transaction: t }); 
 
+            //Si el seguimiento tiene un documento cargado, tambien se borra
             if (idDocumentoABorrar) {
                 await Documento.destroy({
                     where: { idDocumento: seguimiento.idDocumento_FK },
                     transaction: t
                 });
             }
-
-            // 7. ¡ÉXITO! Si todo salió bien, "confirmamos" los cambios.
             await t.commit();
             
             return { message: "Borrado completo" };
 
         } catch (error) {
-            // 8. ¡FALLO! Si algo falló (el paso 4, 5, etc.),
-            //    "deshacemos" todos los cambios.
             await t.rollback();
-            
-            // Pasamos el error al Controlador para que lo maneje
             throw error; 
         }  
 }

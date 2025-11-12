@@ -1,6 +1,4 @@
 const { DataTypes } = require('sequelize');
-//const sequelize = require('../config/db.config');
-// 🚨 Este archivo debe exportar una FUNCIÓN que recibe la instancia de Sequelize 🚨
 module.exports = (sequelize) => { 
     const Seguimiento = sequelize.define('Seguimiento', {
         
@@ -52,36 +50,29 @@ module.exports = (sequelize) => {
         freezeTableName: true
     });
 
-    // 🚨 DEFINICIÓN DE LAS ASOCIACIONES 🚨
+
     Seguimiento.associate = function(models) {
 
         
-        // 1. Relación con USUARIO (El que está fallando)
+
         Seguimiento.belongsTo(models.Usuario, {
             foreignKey: 'userID_FK',
             as: 'usuario'
         });
-        
-        // 2. Relación con TRANSPORTISTA (El otro modelo crítico)
         Seguimiento.belongsTo(models.Transportista, {
             foreignKey: 'idTransportista_FK',
             as: 'transportista'
         });
-        
-        // 3. Relación con DOCUMENTO
        Seguimiento.belongsTo(models.Documento, {
           foreignKey: 'idDocumento_FK',
           as: 'documento'
         });
-        
-        // 4. Relación con EVENTO
         Seguimiento.hasMany(models.Evento, {
             foreignKey: 'idSeguimiento_FK', 
             as: 'eventos'
         });
     };
 
-    return Seguimiento; // Devolver el modelo
+    return Seguimiento; 
 };
 
-//module.exports = Seguimiento;

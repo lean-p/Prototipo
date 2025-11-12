@@ -47,7 +47,7 @@ exports.listarAlertasPorUsuario = async (userID_FK) => {
 
     const alertas = await Alerta.findAll({
         where: {
-            userID_FK: userID_FK // 🚨 Filtra por el usuario autenticado
+            userID_FK: userID_FK
         },
         order: [['createdAt', 'DESC']]
     });

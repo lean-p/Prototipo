@@ -5,7 +5,7 @@ module.exports = (sequelize) => {
     const Alerta = sequelize.define('Alerta', {
 
     idAlerta: {
-        type: DataTypes.BIGINT, // Coincide con BIGINT en MySQL
+        type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
@@ -31,10 +31,9 @@ module.exports = (sequelize) => {
         allowNull: false
     }
     },{
-        // Opciones del modelo:
-        tableName: 'Alerta', // Asegura que el nombre de la tabla en la DB sea 'Usuario'
-        timestamps: true,    // Agrega createdAt y updatedAt automáticamente
-        freezeTableName: true // Evita que Sequelize pluralice el nombre de la tabla
+        tableName: 'Alerta', 
+        timestamps: true,    
+        freezeTableName: true
     });
 
     Alerta.associate = function(models) {

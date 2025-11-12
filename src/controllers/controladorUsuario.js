@@ -17,20 +17,18 @@ exports.registrar = async (req, res) => {
          });   
     }
     const validarClave = (password) => {
-    // Regla 1: Longitud mínima de 8 caracteres
+    // Longitud mínima de 8 caracteres
         if (password.length < 8) {
             throw new Error("La contraseña debe tener al menos 8 caracteres.");
         }
-    // Regla 2: Debe contener al menos una mayúscula
+    // Debe contener al menos una mayúscula
         if (!/[A-Z]/.test(password)) {
          throw new Error("La contraseña debe contener al menos una letra mayúscula.");
         }
-    // Regla 3: Debe contener al menos un número
+    // Debe contener al menos un número
         if (!/[0-9]/.test(password)) {
             throw new Error("La contraseña debe contener al menos un número.");
         }
-    
-    // Si pasa todas las reglas, no devuelve nada (implica éxito)
     };
     try {
 
@@ -136,10 +134,11 @@ exports.modificar = async (req, res) =>{
 
 exports.cerrarSesion = (req, res) => {
     try {
+        // Proceso para borrar la cookie de autenticacion
         res.cookie('auth_token', '', {
             httpOnly: true,
-            path: '/', // ¡Debe coincidir con el path de la cookie original!
-            expires: new Date(0) // ¡Expira inmediatamente!
+            path: '/',
+            expires: new Date(0)
         });
 
         res.status(200).json({ message: "Sesión cerrada exitosamente" });
@@ -149,19 +148,3 @@ exports.cerrarSesion = (req, res) => {
         res.status(500).json({ error: "Error interno al cerrar sesión" });
     }
 };
-
-/*exports.consultarTracking = async (req, res) => {
-
-    const {nro_tracking, transportista} = req.body;
-
-    try {
-
-        const tracking = await consultarTracking.consultarTracking(nro_tracking, transportista);
-
-        return res.status(200).json(tracking)
-
-    } catch (error) {
-
-        return error
-    }
-} */

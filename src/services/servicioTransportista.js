@@ -1,4 +1,3 @@
-//const Transportista = require('../model/Transportista');
 const {Transportista} = require('../model/index');
 
 exports.obternerTransportistaPorID = async (idTransportista) => {
@@ -7,7 +6,7 @@ exports.obternerTransportistaPorID = async (idTransportista) => {
 
         const transportista = await Transportista.findOne({ 
         where: { idTransportista: idTransportista },
-        attributes: ['idTransportista', 'codigo'] // Solo traemos el ID
+        attributes: ['idTransportista', 'codigo']
     });
 
         return transportista

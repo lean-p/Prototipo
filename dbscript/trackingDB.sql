@@ -2,9 +2,7 @@ CREATE DATABASE tracking;
 
 USE tracking;
 
--- ===================================================================
--- DATABASE DDL SCRIPT (MySQL) - Versión Final con Nombres Específicos
--- ===================================================================
+-- Creacion de tablas
 
 CREATE TABLE Transportista (
     idTransportista BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -47,7 +45,7 @@ CREATE TABLE Documento (
     
 );
 
--- TABLA DE SEGUIMIENTO (Nombre principal del envío)
+
 CREATE TABLE Seguimiento (
     idSeguimiento BIGINT PRIMARY KEY AUTO_INCREMENT,
     userID_FK BIGINT NOT NULL COMMENT 'FK al usuario propietario del seguimiento',
@@ -62,7 +60,6 @@ CREATE TABLE Seguimiento (
     createdAt DATETIME NOT NULL,
     updatedAt DATETIME NOT NULL,
 
-    -- Definición de Claves Foráneas
     FOREIGN KEY (userID_FK) REFERENCES Usuario(userID),
     FOREIGN KEY (idTransportista_FK) REFERENCES Transportista(idTransportista),
     FOREIGN KEY (idDocumento_FK) REFERENCES Documento(idDocumento),
@@ -70,7 +67,7 @@ CREATE TABLE Seguimiento (
     UNIQUE KEY uk_tracking_transportista (nro_tracking, idTransportista_FK)
 );
 
--- 6. TABLA DE EVENTOS (Actualizada para referenciar a Seguimiento)
+
 CREATE TABLE Evento (
     idEvento BIGINT PRIMARY KEY AUTO_INCREMENT,
     idSeguimiento_FK BIGINT NOT NULL COMMENT 'FK al seguimiento al que pertenece el evento',
@@ -88,7 +85,6 @@ CREATE TABLE Evento (
     FOREIGN KEY (idSeguimiento_FK) REFERENCES Seguimiento(idSeguimiento)
 );
 
--- 8. TABLA DE ALERTAS
 CREATE TABLE Alerta (
     idAlerta BIGINT PRIMARY KEY AUTO_INCREMENT,
     userID_FK BIGINT NOT NULL COMMENT 'FK al usuario que creó la alerta',

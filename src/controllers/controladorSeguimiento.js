@@ -91,14 +91,10 @@ exports.listar = async (req, res) => {
 exports.eliminar = async (req, res) => {
 
     try {
-        // 1. Obtenemos el ID del seguimiento (de la URL)
+        //Se obtienen parametros de usuario y id de seguimiento
         const { id } = req.params;
-        
-        // 2. Obtenemos el ID del usuario (del token)
-        //    ¡Esto es clave para la seguridad!
         userID = req.userID
 
-        // 3. Le pasamos ambos al Servicio
         await servicioSeguimiento.eliminarSeguimiento(id, userID);
 
         res.status(200).json({ message: "Seguimiento borrado exitosamente" });
@@ -106,7 +102,6 @@ exports.eliminar = async (req, res) => {
     } catch (error) {
         console.error("Error en el controlador:", error.message);
         
-        // Si el servicio lanza "Permiso denegado"
         if (error.message === "Permiso denegado") {
             return res.status(403).json({ error: "No tienes permiso para borrar este seguimiento." });
         }
@@ -141,12 +136,16 @@ exports.listarSeguimientosPaginados = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 10; 
 
-        // Llama a la NUEVA función de paginación
+        // Llamada la funcion que obtiene los seguimientos paginados para mostrarlos en el frontend
         const dataPaginada = await servicioSeguimiento.obtenerSeguimientosPaginados(userID, page, limit);
 
-        res.status(200).json(dataPaginada); // Devuelve { total: 14, ... }
+        res.status(200).json(dataPaginada);
 
     } catch (error) {
-        // ... (manejo de error)
+        return res.status(409).json({
+
+            mensaje: error.message
+
+        });
     }
 };

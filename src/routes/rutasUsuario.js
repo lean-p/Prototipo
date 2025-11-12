@@ -11,6 +11,4 @@ router.patch('/perfil', verificarSesion.verificarSesion, controlUsuario.modifica
 
 router.post('/logout', verificarSesion.verificarSesion, controlUsuario.cerrarSesion)
 
-//router.get('/consultarTracking', controlUsuario.consultarTracking)
-
 module.exports = router;

@@ -1,15 +1,8 @@
-/* === ARCHIVO: src/components/NavigableTable.jsx === */
 import React, { useState, useEffect } from 'react';
 
-/**
- * Componente para renderizar una tabla con filas navegables.
- *
- * @param {object} props
- * @param {string} props.urlEndpoint - URL de la API para obtener los datos de la tabla.
- * @param {string} props.title - Título a mostrar en el panel de la tabla.
- * @param {Array<object>} props.columns - Definición de las columnas [{ key: 'ciudad', header: 'Ciudad' }, ...]
- * @param {function} [props.onRowClick] - Función a ejecutar cuando se hace click en una fila.
- */
+
+// Componente para renderizar una tabla con filas que se muestra en el dashboard
+ 
 
 const API_URL = "http://localhost:3000"
 

@@ -1,20 +1,14 @@
-// src/services/servicioOcr.js
+
 
 const { createWorker } = require('tesseract.js');
 const { createCanvas, Image } = require('canvas');
 const pdfjsLib = require('pdfjs-dist/build/pdf.js');
 const path = require('path');
 
-/**
- * -----------------------------------------------------------------
- * HELPER 1: Conversor de PDF a PNG
- * (scale: 2.0 y Page 1)
- * -----------------------------------------------------------------
- */
+
 async function convertPdfToPngBuffer(pdfBuffer) {
     console.log('[PDF-Converter] Iniciando conversión (Pág 1 @ 200%)...');
 
-    // Arreglo de la ruta de fuentes: Sube 2 niveles (src/services -> raíz)
     const pdfjsDistDir = path.resolve(__dirname, '../../node_modules/pdfjs-dist');
     const standardFontDataUrl = path.join(pdfjsDistDir, 'standard_fonts/');
 
@@ -27,7 +21,7 @@ async function convertPdfToPngBuffer(pdfBuffer) {
     console.log(`[PDF-Converter] Documento cargado. ${pdfDoc.numPages} páginas. PROCESANDO SÓLO PÁGINA 1.`);
     
     const page = await pdfDoc.getPage(1); 
-    const scale = 2.0; // Mantenemos 2.0 (bueno para números)
+    const scale = 2.0;
     const viewport = page.getViewport({ scale });
     const canvas = createCanvas(viewport.width, viewport.height);
     const context = canvas.getContext('2d');
@@ -38,16 +32,10 @@ async function convertPdfToPngBuffer(pdfBuffer) {
 }
 
 
-/**
- * -----------------------------------------------------------------
- * HELPER 2: El "Traductor" v15 (El que funcionaba)
- * (Mapeado a tu Modelo SQL + Arreglo Despacho + Impuesto 011)
- * -----------------------------------------------------------------
- */
 function parsearSim_v15_DHL(textoCompleto) {
     const lineas = textoCompleto.split('\n');
     
-    // Nombres de campos de tu modelo 'Documento.js'
+
     const datos = {
         oficializacion: null, despacho: null, via: null, vendedor: null,
         origen: null, posicionArancelaria: null, divisa: 'DOL',
@@ -57,7 +45,6 @@ function parsearSim_v15_DHL(textoCompleto) {
         arancelSIM: 0, ingresosBrutos: 0
     };
 
-    // --- Helper para limpiar los números (v21 - el que no multiplica) ---
     function limpiarNumero(stringNumero) {
         if (!stringNumero) return 0;
         const limpio = stringNumero.replace('P', '').replace(/\s/g, '').replace(/[\.,](?=\d{3})/g, '');
@@ -66,7 +53,6 @@ function parsearSim_v15_DHL(textoCompleto) {
         return isNaN(numero) ? 0 : numero;
     }
 
-    // --- Helper: Extraer Impuesto (Flexible) ---
     function extraerImpuesto(codigo, nombreCampo) {
         const regexImpuesto = new RegExp(`\\(\\s*${codigo}\\s*\\)`);
         const lineaImpuesto = lineas.find(l => regexImpuesto.test(l));
@@ -76,8 +62,6 @@ function parsearSim_v15_DHL(textoCompleto) {
             if (numerosEnLinea && numerosEnLinea.length > 0) {
                 const valor = numerosEnLinea[numerosEnLinea.length - 1];
                 let numeroLimpio = limpiarNumero(valor);
-                
-                // El parche para "100" (que Tesseract lee mal con scale 2.0)
                 if (codigo === '500' && (numeroLimpio === 100 || numeroLimpio === 1000)) {
                     console.warn(`[ParsearSIM-v15] ADVERTENCIA: Tesseract leyó mal el Arancel SIM (500). Corrigiendo a '10'.`);
                     numeroLimpio = 10;
@@ -115,9 +99,8 @@ function parsearSim_v15_DHL(textoCompleto) {
         const lineaVia = lineas.find(l => l.startsWith('AVION'));
         if (lineaVia) datos.via = 'AVION';
 
-        // --- 4. Vendedor (Lógica DHL v12 - La que SÍ funciona) ---
-        // Esta lógica SÍ funciona con scale 2.0 porque busca el CUIT
-        const lineaAgente = lineas.find(l => l.includes('30-58011131-5')); // CUIT de DHL
+        // --- 4. Vendedor (La busqueda basandose en el CUIT del doc) ---
+        const lineaAgente = lineas.find(l => l.includes('30-58011131-5'));
         if (lineaAgente) {
             const match = lineaAgente.match(/30-58011131-5\s+(.+)/);
             if (match && match[1]) {
@@ -125,7 +108,7 @@ function parsearSim_v15_DHL(textoCompleto) {
             }
         }
 
-        // --- 5. Origen (Lógica DHL v12 - La que SÍ funciona) ---
+        // --- 5. Origen 
         const indiceLineaOrigen = lineas.findIndex(l => l.includes('Origen Pais') && l.includes('Provincia')); 
         if (indiceLineaOrigen > -1 && lineas[indiceLineaOrigen + 1]) {
             const valueRow = lineas[indiceLineaOrigen + 1].trim();
@@ -133,7 +116,7 @@ function parsearSim_v15_DHL(textoCompleto) {
             if (partes.length > 1) datos.origen = partes[1].trim(); 
         }
 
-        // --- 6. FOB Total y Flete Total (Lógica DHL v12) ---
+        // --- 6. FOB Total y Flete Total 
         const headerIndex = lineas.findIndex(l => l.includes('FOB Total') && l.includes('Flete Total')); 
         if (headerIndex > -1 && lineas[headerIndex + 1]) {
             const valueRow = lineas[headerIndex + 1];
@@ -142,7 +125,7 @@ function parsearSim_v15_DHL(textoCompleto) {
             if (numeros && numeros.length > 1) datos.costoFlete = limpiarNumero(numeros[1]); 
         }
         
-        // --- 7. Seguro Total (Lógica DHL v12) ---
+        // --- 7. Seguro Total
         const seguroHeaderIndex = lineas.findIndex(l => l.trim().startsWith('Seguro Total')); 
         if (seguroHeaderIndex > -1 && lineas[seguroHeaderIndex + 1]) {
             const lineaSiguiente = lineas[seguroHeaderIndex + 1];
@@ -150,7 +133,7 @@ function parsearSim_v15_DHL(textoCompleto) {
             if (match) datos.costoSeguro = limpiarNumero(match[1]); 
         }
 
-        // --- 8. Posición SIM (Lógica DHL v12) ---
+        // --- 8. Posición SIM
         match = textoCompleto.match(/(\d{4}\.\d{2}\.\d{2}\.\d{3}\w)/);
         if (match) {
              let sim = match[0];
@@ -158,7 +141,7 @@ function parsearSim_v15_DHL(textoCompleto) {
              datos.posicionArancelaria = sim; 
         }
         
-        // --- 9. Impuestos (Mapeados a tu modelo) ---
+        // --- 9. Impuestos
         extraerImpuesto('010', 'derechoDeImportacion');
         extraerImpuesto('011', 'tasaDeEstadia');
         extraerImpuesto('415', 'iva');
@@ -175,11 +158,6 @@ function parsearSim_v15_DHL(textoCompleto) {
 }
 
 
-/**
- * -----------------------------------------------------------------
- * ¡LA FUNCIÓN PRINCIPAL QUE EXPORTAMOS!
- * -----------------------------------------------------------------
- */
 exports.analizarDocumentoDeAduana = async (pdfBuffer) => {
     let worker;
     try {
@@ -198,13 +176,12 @@ exports.analizarDocumentoDeAduana = async (pdfBuffer) => {
         console.log('Tesseract terminó. Parseando resultados...');
         const datosExtraidos = parsearSim_v15_DHL(text);
         
-        return datosExtraidos; // Devuelve el JSON limpio
+        return datosExtraidos;
 
     } catch (error) {
         console.error('Error en el servicio OCR:', error);
         throw new Error('Falló el procesamiento del documento.');
     } finally {
-        // 5. Asegurarse de cerrar el worker
         if (worker) {
             await worker.terminate();
             console.log('Tesseract worker terminado.');

@@ -1,18 +1,14 @@
-// src/components/SeguimientoDetalle.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
-// Un componente simple para el ítem del timeline
+//Componente de cada item en la linea de tiempo de un seguimiento
 const TimelineItem = ({ evento, esUltimo }) => (
   <div className="relative pl-8">
-    {/* La línea vertical del timeline */}
     {!esUltimo && <div className="absolute left-3 top-3 h-full w-0.5 bg-gray-300"></div>}
-    {/* El punto del timeline */}
     <div className="absolute left-0 top-2 h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center ring-4 ring-white">
       <div className="h-2 w-2 bg-white rounded-full"></div>
     </div>
-    {/* El contenido del evento */}
     <div className="ml-4">
       <p className="font-semibold text-gray-800">{evento.descripcion}</p>
       <p className="text-sm text-gray-600">{evento.ubicacion}</p>
@@ -22,7 +18,7 @@ const TimelineItem = ({ evento, esUltimo }) => (
 );
 
 export default function SeguimientoDetalle(currentUser, onLogout) {
-  const { id } = useParams(); // Obtiene el 'id' de la URL
+  const { id } = useParams();
   const [seguimiento, setSeguimiento] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,7 +48,7 @@ export default function SeguimientoDetalle(currentUser, onLogout) {
       }
     };
     fetchDetalle();
-  }, [id]); // El efecto se ejecuta si el ID de la URL cambia
+  }, [id]);
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <div>Error: {error.message}</div>;

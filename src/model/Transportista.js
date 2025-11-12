@@ -1,13 +1,12 @@
 const { DataTypes } = require('sequelize');
 
-//const sequelize = require('../config/db.config');
 
 module.exports = (sequelize) => {
 
     const Transportista = sequelize.define('Transportista', {
     
         idTransportista: {
-            type: DataTypes.BIGINT, // Coincide con BIGINT en MySQL
+            type: DataTypes.BIGINT,
             primaryKey: true,
             autoIncrement: true,
             allowNull: false
@@ -21,7 +20,7 @@ module.exports = (sequelize) => {
             allowNull: false
         }
     }, {
-    // Opciones del modelo:
+
     tableName: 'Transportista',
     timestamps: false,
     freezeTableName: true
@@ -29,7 +28,7 @@ module.exports = (sequelize) => {
 
     Transportista.associate = function(models) {
         Transportista.hasMany(models.Seguimiento, {
-            foreignKey: 'idTransportista_FK', // La clave foránea que está en la tabla Seguimiento
+            foreignKey: 'idTransportista_FK',
             as: 'seguimientos'
             }
         );
@@ -37,5 +36,3 @@ module.exports = (sequelize) => {
 
     return Transportista;
 };
-
-//module.exports = Transportista;

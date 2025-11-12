@@ -38,19 +38,14 @@ export default function ContextMenu({ currentUser, onLogout}) {
 
   return (
     <div className="min-h-screen bg-white shadow-xl border-r border-gray-200 p-6 flex flex-col">
-      {/* Header de la barra lateral - Con imagen/logo */}
       <div className="mb-8">
         <div className="flex flex-col items-center gap-3 mb-4">
-          {/* Imagen/logo placeholder - puedes reemplazar con tu logo */}
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
             <span className="text-white text-2xl font-bold">📦</span>
           </div>
-          {/* Quitamos el título de sistema de cargas */}
         </div>
         <div className="w-16 h-1 bg-blue-500 rounded-full mx-auto"></div>
       </div>
-
-      {/* Items del menú */}
       <nav className="flex-1 space-y-2">
         {menuItems.map((item) => (
           <button
@@ -70,8 +65,6 @@ export default function ContextMenu({ currentUser, onLogout}) {
           </button>
         ))}
       </nav>
-
-      {/* Footer en la parte inferior */}
       <div className="pt-6 border-t border-gray-200">
         <div className="text-center">
           <p className="text-sm text-gray-600 font-medium">{nombreCompleto}</p>

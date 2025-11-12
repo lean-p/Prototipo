@@ -2,9 +2,7 @@ CREATE DATABASE dwtracking;
 
 USE dwtracking;
 
--- ===================================================================
--- DATABASE DDL SCRIPT (MySQL) - Versión Final con Nombres Específicos
--- ===================================================================
+-- Creacion de las tablas
 
 CREATE TABLE dimTransportista (
     idTransportista BIGINT PRIMARY KEY,
@@ -108,7 +106,7 @@ CREATE TABLE fact_Seguimiento (
     createdAt DATETIME NOT NULL,
     updatedAt DATETIME NOT NULL,
 
-    -- Definición de Claves Foráneas
+
     FOREIGN KEY (userID) REFERENCES dimUsuario(userID),
     FOREIGN KEY (idTransportista) REFERENCES dimTransportista(idTransportista),
     FOREIGN KEY (idDetalle) REFERENCES dimDetalle(idDetalle),
@@ -119,11 +117,16 @@ CREATE TABLE fact_Seguimiento (
     FOREIGN KEY (idFechaInicial) REFERENCES dimFecha(idFecha)
 );
 
+
+-- Creacion de tabla auxiliar que almacena la ultima ejecucion del ETL
+
 CREATE TABLE EtlMetadata (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombreProceso VARCHAR(50) UNIQUE,
     ultimaEjecucionExitosa DATETIME
 );
 
-INSERT INTO EtlMetadata (nombreProceso, ultimaEjecucionExitosa) VALUES ('ETL_Seguimientos', '1970-01-01 00:00:00'); -- Una fecha muy antigua para la primera vez
+-- Iniciar la tabla con una fecha antigua para la primera corrida del ETL
+
+INSERT INTO EtlMetadata (nombreProceso, ultimaEjecucionExitosa) VALUES ('ETL_Seguimientos', '1970-01-01 00:00:00');
 

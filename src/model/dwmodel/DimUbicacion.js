@@ -9,13 +9,12 @@ module.exports = (sequelize) => {
     },
     nombre: {
       type: DataTypes.STRING(100),
-      allowNull: true // Puede ser null según tu SQL
+      allowNull: true 
     },
     region: {
       type: DataTypes.STRING(100),
-      allowNull: true // Puede ser null según tu SQL
+      allowNull: true
     }
-    // Considera añadir país, ciudad, etc.
   }, {
     tableName: 'dimUbicacion',
     timestamps: false

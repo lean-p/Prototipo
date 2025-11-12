@@ -7,11 +7,9 @@ exports.crear = async (req, res) => {
 
     try {
 
-//        const reporte = await servicioReporte.generarReporte();
-
         const { rutaArchivo, nombreArchivo} = await servicioReporte.generarReporte(userID_FK);
 
-    // 2. Usa res.download() para enviar el archivo
+        // Usa res.download() para enviar el archivo
         res.download(rutaArchivo, nombreArchivo, (err) => {
         if (err) {
             console.error('Error al enviar el archivo:', err);
@@ -22,7 +20,7 @@ exports.crear = async (req, res) => {
             console.log(`Archivo '${nombreArchivo}' enviado para descarga.`);
         }
 
-        // 3. Elimina el archivo temporal DESPUÉS de intentar enviarlo
+        //Se elimina el archivo temporal despues de intentar enviarlo
         fs.unlink(rutaArchivo, (unlinkErr) => {
             if (unlinkErr) {
             console.error('Error al eliminar el archivo temporal:', unlinkErr);

@@ -12,8 +12,8 @@ module.exports = (sequelize) => {
       comment: 'Nombre del Courier (ej. FedEx, DHL)'
     }
   }, {
-    tableName: 'dimTransportista', // Nombre exacto de la tabla
-    timestamps: false // Común en DW no usar createdAt/updatedAt
+    tableName: 'dimTransportista',
+    timestamps: false
   });
   return DimTransportista;
 };

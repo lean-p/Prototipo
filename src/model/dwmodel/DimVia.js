@@ -7,7 +7,7 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    via: { // Considera renombrar a nombreVia
+    via: {
       type: DataTypes.STRING(100),
       allowNull: true
     }

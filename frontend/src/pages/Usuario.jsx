@@ -1,15 +1,9 @@
-/* === ARCHIVO CORREGIDO: src/pages/Usuario.jsx === */
-
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
-// --- ¡ARREGLO! Importar los íconos ---
 import { XCircle, CheckCircle } from 'lucide-react'; 
 
 const API_URL = "http://localhost:3000/api/auth";
 
-// --- ¡ARREGLO #1! ---
-// Usamos llaves { } para desestructurar el objeto 'props'
-// Ahora 'currentUser' SÍ es el objeto que esperas.
 export default function Usuario({ currentUser, onLogout, onBack }) {
 
     const { id } = useParams()
@@ -25,14 +19,12 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
         confirmarClave: '' 
     });
     
-    // --- ¡ARREGLO! Unificamos 'error' y 'mensaje' en 'status' ---
     const [status, setStatus] = useState({ success: null, error: null, loading: false });
     const navigate = useNavigate();
-    // Este console.log ahora mostrará el objeto de usuario correcto
+
 
 
     useEffect(() => {
-        // Esta lógica de "pre-llenado" ahora funcionará
         if (currentUser && currentUser.usuario) {
             setFormData({
                 nombre: currentUser.usuario.nombre || '',
@@ -53,7 +45,6 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // --- ¡ARREGLO! Usamos setStatus ---
         setStatus({ success: false, error: null, loading: true });
         
         const token = currentUser?.token; 
@@ -64,7 +55,6 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
         }
 
         if (formData.clave !== formData.confirmarClave) {
-            // --- ¡ARREGLO! Usamos setStatus ---
             setStatus({ success: false, error: "Las nuevas contraseñas no coinciden.", loading: false });
             return;
         }
@@ -78,7 +68,8 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
         }
         
         try {
-            const response = await fetch(API_URL + '/perfil/', { // (Asegúrate que tu ruta de API sea correcta)
+            // Llamada a la API para modificar la informacion de un usuario
+            const response = await fetch(API_URL + '/perfil/', { 
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -88,21 +79,20 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
             const resultado = await response.json();
 
             if (response.ok) {
-                // --- ¡ARREGLO! Usamos setStatus ---
+
                 setStatus({ success: true, error: null, loading: false });
                 // Limpiamos los campos de contraseña
                 setFormData(prev => ({ ...prev, clave: '', confirmarClave: '' }));
                 setCurrentUser(prevCurrentUser => ({
-                    ...prevCurrentUser, // Copia todo lo viejo (token, etc.)
+                    ...prevCurrentUser,
                     usuario: {
-                        ...prevCurrentUser.usuario, // Copia datos viejos (ID, email)
-                        ...datosParaActualizar   // Sobreescribe con { nombre, apellido }
+                        ...prevCurrentUser.usuario, // Se mantienen datos anteriores
+                        ...datosParaActualizar   // Datos que se actualizan
                     }
                 }));
                 console.log("Perfil actualizado:", resultado);
             } else {
                 const errorMessage = resultado.message || resultado.error || "Error desconocido al actualizar.";
-                // --- ¡ARREGLO! Usamos setStatus ---
                 setStatus({ success: false, error: errorMessage, loading: false });
             }
 
@@ -115,13 +105,10 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
         setStatus({ success: false, error: null, loading: false });
     };
 
-    // Extraemos los valores de 'status' para usarlos en el JSX
     const isSuccess = status.success;
     const isLoading = status.loading;
     const currentError = status.error;
 
-    // --- ¡ARREGLO DE SEGURIDAD! ---
-    // Añadimos un "guardia" por si 'currentUser' todavía no ha cargado
     if (!currentUser || !currentUser.usuario) {
         return <div>Cargando perfil...</div>; // O un spinner
     }
@@ -160,10 +147,9 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
                                     <label className="block text-gray-700 mb-2 font-medium">Usuario</label>
                                     <input
                                         type="text"
-                                        // --- ¡ARREGLO! Añadimos '?' por seguridad ---
                                         placeholder={currentUser?.usuario?.user}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 bg-gray-100" // Fondo gris
-                                        disabled // El usuario (email) no se puede cambiar
+                                        disabled // Se deshabilita la posibilidad de modificar este campo
                                     />
                                 </div>
 
@@ -171,11 +157,9 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
                                     <label className="block text-gray-700 mb-2 font-medium">Nombre</label>
                                     <input
                                         type="text"
-                                        // --- ¡ARREGLO #2! ---
-                                        name="nombre" // <-- Añadimos 'name'
-                                        value={formData.nombre} // <-- Debe ser formData.nombre
-                                        onChange={handleChange} // <-- Debe ser handleChange
-                                        // --- FIN DEL ARREGLO ---
+                                        name="nombre"
+                                        value={formData.nombre} 
+                                        onChange={handleChange} 
                                         placeholder={currentUser?.usuario?.nombre}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 bg-white"
                                         disabled={isLoading}
@@ -185,11 +169,9 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
                                     <label className="block text-gray-700 mb-2 font-medium">Apellido</label>
                                     <input
                                         type="text"
-                                        // --- ¡ARREGLO #3! ---
-                                        name="apellido" // <-- Añadimos 'name'
-                                        value={formData.apellido} // <-- Debe ser formData.apellido
-                                        onChange={handleChange} // <-- Debe ser handleChange
-                                        // --- FIN DEL ARREGLO ---
+                                        name="apellido"
+                                        value={formData.apellido}
+                                        onChange={handleChange} 
                                         placeholder={currentUser?.usuario?.apellido}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 bg-white"
                                         disabled={isLoading}
@@ -199,28 +181,24 @@ export default function Usuario({ currentUser, onLogout, onBack }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
                                     <input
                                         type="password"
-                                        // --- ¡ARREGLO #4! ---
-                                        name="clave" // <-- Debe coincidir con el estado formData
+                                        name="clave"
                                         value={formData.clave}
-                                        onChange={handleChange} // <-- Debe ser handleChange
-                                        // --- FIN DEL ARREGLO ---
+                                        onChange={handleChange}
                                         placeholder="••••••••"
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-900 bg-white"
-                                        minLength="6" // <-- Quitado 'required'
+                                        minLength="8" //
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar contraseña</label>
                                     <input
                                         type="password"
-                                        // --- ¡ARREGLO #5! ---
-                                        name="confirmarClave" // <-- Debe coincidir con el estado formData
+                                        name="confirmarClave"
                                         value={formData.confirmarClave}
-                                        onChange={handleChange} // <-- Debe ser handleChange
-                                        // --- FIN DEL ARREGLO ---
+                                        onChange={handleChange}
                                         placeholder="••••••••"
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-900 bg-white"
-                                        minLength="6" // <-- Quitado 'required'
+                                        minLength="8"
                                     />
                                 </div>
                                 <button

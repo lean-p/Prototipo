@@ -1,13 +1,12 @@
 const { DataTypes } = require('sequelize');
 
-//const sequelize = require('../config/db.config');
 
 module.exports = (sequelize) =>{
 
     const Evento = sequelize.define('Evento', {
 
     idEvento: {
-        type: DataTypes.BIGINT, // Coincide con BIGINT en MySQL
+        type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
@@ -49,10 +48,9 @@ module.exports = (sequelize) =>{
         allowNull: false
     }
     }, {
-        // Opciones del modelo:
-        tableName: 'Evento', // Asegura que el nombre de la tabla en la DB sea 'Usuario'
-        timestamps: true,    // Agrega createdAt y updatedAt automáticamente
-        freezeTableName: true // Evita que Sequelize pluralice el nombre de la tabla
+        tableName: 'Evento',
+        timestamps: true,
+        freezeTableName: true
     });
 
     Evento.associate = function(models) {
@@ -67,7 +65,3 @@ module.exports = (sequelize) =>{
     };
     return Evento;
 }
-
-
-
-//module.exports = Evento;

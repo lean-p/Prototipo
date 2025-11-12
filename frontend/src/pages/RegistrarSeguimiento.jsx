@@ -1,6 +1,6 @@
 import { useState, useEffect} from "react";
 import { useOutletContext } from 'react-router-dom';
-import { CheckCircle, XCircle } from "lucide-react"; // Añadimos XCircle para errores
+import { CheckCircle, XCircle } from "lucide-react";
 import ContextMenu from "./ContextMenu";
 
 // URL base de tu API de seguimiento
@@ -13,12 +13,12 @@ export default function RegistrarSeguimiento({ currentUser, onLogout, onBack }) 
 
     const { setTitle } = useOutletContext();
 
-    // 3. Llama a 'setTitle' cuando este componente se monte
+
     useEffect(() => {
         setTitle('Registrar seguimiento');
     }, [setTitle]);
 
-    // 🚨 Función de envío de datos al backend
+    // Función de envío de datos al backend
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -31,17 +31,14 @@ export default function RegistrarSeguimiento({ currentUser, onLogout, onBack }) 
 
         setStatus({ success: false, error: null, loading: true });
         
-        // 1. Obtener el token de la sesión
-        // 🚨 CORRECCIÓN: Usamos el encadenamiento opcional (?.) para evitar fallos si currentUser es null
         const token = currentUser?.token; 
 
-        // Chequeo de seguridad adicional: Si no hay token, fallamos inmediatamente.
         if (!token) {
             setStatus({ success: false, error: "Error de autenticación. Por favor, reinicia la sesión.", loading: false });
             return;
         }
 
-        // 2. Datos a enviar al backend
+        //Datos a enviar al backend
         const dataToSend = {
             nro_tracking: tracking.trim(),
             transportista: transportista, 
@@ -54,27 +51,23 @@ export default function RegistrarSeguimiento({ currentUser, onLogout, onBack }) 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 🚨 ENCABEZADO DE AUTORIZACIÓN JWT
                     'Authorization': `Bearer ${token}`, 
                 },
                 body: JSON.stringify(dataToSend),
             });
 
-            // Leer la respuesta (será la data del seguimiento creado o el objeto de error)
             const responseData = await response.json(); 
             console.log(responseData);
-            if (response.ok) { // 201 Created (Éxito)
+            if (response.ok) { 
                 setStatus({ success: true, error: null, loading: false });
-                setTracking(""); // Limpiar el campo
+                setTracking(""); 
                 console.log("Seguimiento creado:", responseData);
-            } else { // 400, 401, 409, 500 (Fallo)
-                // Extraer el mensaje de error del backend
+            } else {                 
                 const errorMessage = responseData.message || responseData.mensaje || "Error desconocido al registrar.";
                 setStatus({ success: false, error: errorMessage, loading: false });
             }
 
         } catch (networkError) {
-            // Error de red (servidor caído)
             setStatus({ success: false, error: "Error de conexión con el servidor. Por favor, verifica el backend.", loading: false });
             console.error("Network Error:", networkError);
         }
@@ -87,15 +80,9 @@ export default function RegistrarSeguimiento({ currentUser, onLogout, onBack }) 
 
     return (
         <div className="min-h-screen bg-gray-100 flex">
-            {/* Barra lateral con logo */}
-            {/* Contenido principal */}
             <div className="flex-1 p-6 flex flex-col">
-                {/* Contenedor para centrar la caja */}
                 <div className="flex-1 flex items-center justify-center">
-                    {/* Caja del formulario centrada */}
                     <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg border border-gray-200">
-                        
-                        {/* --- Mensajes de Estado y Error --- */}
                         {currentError && (
                             <div className="flex items-center gap-3 mb-6 p-4 bg-red-50 border border-red-300 text-red-700 rounded-xl">
                                 <XCircle className="w-5 h-5" />
@@ -104,7 +91,6 @@ export default function RegistrarSeguimiento({ currentUser, onLogout, onBack }) 
                         )}
                         
                         {isSuccess ? (
-                            // Vista de éxito
                             <div className="flex flex-col items-center text-center py-8">
                                 <CheckCircle className="w-16 h-16 text-green-500 mb-6" />
                                 <p className="text-xl text-gray-800 font-semibold">
@@ -119,7 +105,7 @@ export default function RegistrarSeguimiento({ currentUser, onLogout, onBack }) 
                                 </button>
                             </div>
                         ) : (
-                            // Formulario
+                            //Formulario para el registro de un seguimiento nuevo
                             <form className="space-y-5" onSubmit={handleSubmit}>
                                 <h2 className="text-xl font-semibold text-gray-800 mb-6">Datos de la Carga</h2>
                                 

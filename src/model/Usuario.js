@@ -1,6 +1,4 @@
 const { DataTypes } = require('sequelize');
-//const sequelize = require('../config/db.config');
-// 🚨 ESTA FUNCIÓN ES LA CLAVE 🚨
 module.exports = (sequelize) => { 
     const Usuario = sequelize.define('Usuario', {
         
@@ -33,19 +31,15 @@ module.exports = (sequelize) => {
     });
 
     Usuario.associate = function(models) {
-        // Asocia con Seguimiento
         Usuario.hasMany(models.Seguimiento, {
             foreignKey: 'userID_FK',
             as: 'seguimientos'
         });
-        // Asocia con Alerta
         Usuario.hasMany(models.Alerta, {
             foreignKey: 'userID_FK',
             as: 'alertas'
         });
     };
 
-    return Usuario; // Devuelve la CLASE MODELO
+    return Usuario;
 };
-
-//module.exports = Usuario;

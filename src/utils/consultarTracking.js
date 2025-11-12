@@ -3,14 +3,19 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
     const username = '';
     const password = '';
     const credentialsDSV = Buffer.from(`${username}:${password}`).toString("base64");
+
+    const DHL_SECRET_KEY = process.env.DHL_SECRET_KEY;
+    const FX_CLIENT_ID = process.env.FX_CLIENT_ID;
+    const FX_CLIENT_SECRET = process.env.FX_CLIENT_SECRET;
+
     const integrationsConfig = {
-    // 🚨 Clave 1: DSV
+
         'FedEx': {
             authUrl: 'https://apis.fedex.com/oauth/token',
             authBody: new URLSearchParams({
                     grant_type: 'client_credentials',
-                    client_id: 'l70cfd4b08af95450fada615ca95188236',
-                    client_secret: '5ef45a33e7a64265a95d8634ce9f5833'
+                    client_id: FX_CLIENT_ID,
+                    client_secret: FX_CLIENT_SECRET
                 }),
             authHeaders: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -18,19 +23,14 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
             baseUrl: 'https://apis.fedex.com/track/v1/trackingnumbers',
             method: 'POST', 
         },
-        // 🚨 Clave 2: DHL
         'DHL': {
             baseUrl: 'https://api-eu.dhl.com/track/shipments?trackingNumber=',
             headers:  {
                         "Content-Type": "application/json",
-                        "DHL-API-Key": "g2wbGku5ZnswWMJ0S36QAJPtK7uL9Igs"
+                        "DHL-API-Key": DHL_SECRET_KEY
                     },
             method: 'GET',
-        },
-        // Clave 3: UPS
-        'UPS': {
-            // ... (otros datos de configuración)
-        },
+        }
     };    
 
 
@@ -50,8 +50,7 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
                 headers: config.headers
             });
             const data = await response.json();
-            
-            // --- LÓGICA DE MAPEO ---
+ 
             const shipmentsArray = data.shipments;
 
             if (!shipmentsArray || shipmentsArray.length === 0) {
@@ -59,9 +58,9 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
             }
 
             const shipment = shipmentsArray[0];
-            const lastEvent = shipment.events[0]; // El evento más reciente
+            const lastEvent = shipment.events[0];
 
-            // 🚨 1. CREACIÓN DEL OBJETO MAESTRO MAPEADO 🚨
+
             const eventoMapeado = {
                 // Mapeo de datos para la tabla Evento:
                 fechaHora: lastEvent.timestamp,
@@ -70,7 +69,7 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
                 descripcion: lastEvent.description,
                 
                 
-                // Datos Maestros (necesarios para la primera inserción del Seguimiento):
+                // Mapeo de datos para el seguimiento
                 ubicacion: shipment.status.location.address.addressLocality,
                 origen: shipment.origin.address.addressLocality,
                 destino: shipment.destination.address.addressLocality,
@@ -79,7 +78,6 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
                 esFinalizado: (shipment.status.statusCode === 'delivered') 
             };
 
-            // 2. RETORNO CORRECTO: Devolvemos SOLO el objeto mapeado
             return eventoMapeado;
 
         } catch (error) {
@@ -123,7 +121,7 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
             
             const shipmentsArray = data.output.completeTrackResults[0].trackResults[0];
             console.log(shipmentsArray)
-            const lastEvent = shipmentsArray.latestStatusDetail; // El evento más reciente
+            const lastEvent = shipmentsArray.latestStatusDetail;
             const eventos = shipmentsArray.scanEvents;
             let estado;
             if (lastEvent.derivedCode === 'DL'){
@@ -139,9 +137,6 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
                     throw new Error("No se encontraron datos de seguimiento para este número.");
             }
 
-            
-
-                // 🚨 1. CREACIÓN DEL OBJETO MAESTRO MAPEADO 🚨
                 const eventoMapeado = {
                     // Mapeo de datos para la tabla Evento:
                     fechaHora: shipmentsArray.dateAndTimes[0].dateTime,
@@ -150,7 +145,7 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
                     descripcion: lastEvent.description,
                     
                     
-                    // Datos Maestros (necesarios para la primera inserción del Seguimiento):
+                    // Mapeo de datos para el seguimiento
                     ubicacion: lastEvent.scanLocation.city + ' - ' + lastEvent.scanLocation.countryName,
                     origen: shipmentsArray.originLocation.locationContactAndAddress.address.city + ' - ' + shipmentsArray.originLocation.locationContactAndAddress.address.countryName,
                     destino: shipmentsArray.lastUpdatedDestinationAddress.city + ' - ' + shipmentsArray.lastUpdatedDestinationAddress.countryName,
@@ -170,6 +165,3 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
         }
     }
 }
-
-//const resp = await this.consultarTracking('4574596261', 'DHL');
-//console.log(resp)

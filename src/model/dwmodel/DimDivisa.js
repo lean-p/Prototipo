@@ -7,7 +7,7 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    divisa: { // Considera renombrar a codigoDivisa o nombreDivisa
+    divisa: {
       type: DataTypes.STRING(100),
       allowNull: true
     }

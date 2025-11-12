@@ -4,6 +4,8 @@ import "datatables.net";
 import { Link } from 'react-router-dom';
 import MenuAcciones from './MenuAcciones';
 
+// Compoenente que muestra la tabla de cada seguimiento. Llama al menu de acciones que se pueden realizar sobre cada seguimiento
+
 export default function Seguimientos({ seguimientos, currentUser, onRefreshData }) {
   const tableRef = useRef(null);
 
@@ -19,7 +21,7 @@ export default function Seguimientos({ seguimientos, currentUser, onRefreshData 
     });
 
     return () => {
-      table.destroy(); // limpiar al desmontar
+      table.destroy();
     };
   }, [seguimientos]);
 
@@ -55,10 +57,10 @@ export default function Seguimientos({ seguimientos, currentUser, onRefreshData 
             <td>{new Date(s.fechaInicio).toLocaleDateString('es-AR')}</td>
             <td className="text-right">
                 <MenuAcciones 
-                    currentUser={currentUser} // Pasa el prop hacia abajo
-                    seguimiento={s}         // Pasa el seguimiento actual
-                    onUploadSuccess={onRefreshData} // Pasa la función de refresco
-                    onDeleteSuccess={onRefreshData} // Pasa la misma función
+                    currentUser={currentUser}
+                    seguimiento={s}
+                    onUploadSuccess={onRefreshData}
+                    onDeleteSuccess={onRefreshData}
                 />
             </td>
           </tr>

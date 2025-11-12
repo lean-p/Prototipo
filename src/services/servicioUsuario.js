@@ -1,9 +1,9 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const saltRounds = 10;
-//const Usuario = require('../model/Usuario');
 const {Usuario} = require('../model/index');
 const {op} = require('sequelize');
+
+const saltRounds = 10;
 
 exports.registrarUsuario = async (email, password, nombre, apellido = 'Sin Apellido') => {
     
@@ -56,7 +56,7 @@ exports.autenticarUsuario = async (email, password) => {
             'nombre', 
             'apellido', 
             'email', 
-            'hashPassword' // Necesario para bcrypt.compare()
+            'hashPassword'
         ]
     });
 
@@ -74,21 +74,17 @@ exports.autenticarUsuario = async (email, password) => {
         throw new Error ('Usuario o contraseña incorrecto');
     }
     const payload = {
-        userID: usuario.userID, // 👈 EL ID ES LO MÁS IMPORTANTE PARA LA SESIÓN
+        userID: usuario.userID,
         email: usuario.email
-        // Puedes incluir el rol, etc.
     };
     console.log(payload);
-    // 2. GENERAR Y FIRMAR el token
+
     const token = jwt.sign(
         payload, 
-        JWT_SECRET, // Usa tu clave secreta
-        { expiresIn: '1h' } // El token expira en 1 hora (o el tiempo que desees)
+        JWT_SECRET, 
+        { expiresIn: '1h' } 
     );
 
-    // --- RETORNO FINAL ---
-
-    // Devolvemos el TOKEN y los datos públicos del usuario
     return {
         token: token,
         userID: usuario.userID,

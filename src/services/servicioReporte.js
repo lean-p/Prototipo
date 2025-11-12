@@ -13,13 +13,12 @@ exports.generarReporte = async (userId) =>{
     const nombreArchivo = `seguimiento_${userId}_${fechaFormateada}.csv`;
     const dirTemporal = path.join(__dirname, '..', 'temp'); 
     
-    // 3. Verifica si la carpeta existe, si no, la crea
+    // Verifica si la carpeta existe, si no, la crea
     if (!fs.existsSync(dirTemporal)){
         console.log(`Creando directorio temporal en: ${dirTemporal}`);
-        fs.mkdirSync(dirTemporal, { recursive: true }); // 'recursive: true' crea carpetas anidadas si es necesario
+        fs.mkdirSync(dirTemporal, { recursive: true });
     }
 
-    // 4. Construye la ruta completa al archivo
     const rutaArchivo = path.join(dirTemporal, nombreArchivo);
 
 
@@ -62,7 +61,7 @@ exports.generarReporte = async (userId) =>{
         };
 
         if (seguimiento.documento) {
-            const doc = seguimiento.documento; // Alias para limpieza
+            const doc = seguimiento.documento;
             
             docRow.oficializacion = doc.oficializacion ? new Date(doc.oficializacion).toLocaleDateString('es-AR') : '';
             docRow.despacho = doc.despacho;
@@ -89,7 +88,6 @@ exports.generarReporte = async (userId) =>{
     const csv = createCsvWriter ({
         path: rutaArchivo,
         header: [
-            // --- Headers Base ---
             {id: 'fechaInicio', title: 'Fecha'},
             {id: 'nro_tracking', title: 'Tracking'},
             {id: 'transportista', title: 'Transportista'},
@@ -97,7 +95,7 @@ exports.generarReporte = async (userId) =>{
             {id: 'ubicacionActual', title: 'Ultima ubicacion'},
             {id: 'descripcion', title: 'Descripcion'},
             
-            // --- Nuevos Headers del Documento ---
+            //Headers que se agregan con la carga de un documento
             {id: 'oficializacion', title: 'Fecha Oficializacion'},
             {id: 'despacho', title: 'Despacho'},
             {id: 'via', title: 'Via'},
