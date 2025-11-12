@@ -1,3 +1,6 @@
+/*Este componente es un ETL que corre cada hora, para llevar las actualizaciones
+de la base transaccional hacia la de datawarehouse
+*/
 const {EtlMetadata, FactSeguimiento, DimUsuario, DimDivisa, DimTransportista, DimEstado, DimVia, DimVendedor, DimPosicionArancelaria, DimDetalle, DimDespacho} = require('../model/dwmodel/index');
 const {Seguimiento, Transportista, Usuario, Documento} = require('../model/index');
 const servicioEvento = require('../services/servicioEvento');
@@ -8,22 +11,19 @@ const cron = require('node-cron');
 
 async function procesarSeguimiento (seguimiento) {
 
-
+    //Primero se obtienen los datos del seguimiento y se cargan las dimensiones.
+    //Si la dimension no existe en su propia table, entonces lo crea
     const usuario = seguimiento.dataValues.usuario.dataValues;
     console.log(usuario)
     const [dimUsuario, fueCreado] = await DimUsuario.findOrCreate({
                 where: { 
-                    // Busca por el ID original del usuario transaccional
-                    // Asegúrate de tener una columna 'idUsuarioOriginal' en DimUsuario
-                    userId: usuario.userID // O como se llame la PK en tu modelo Usuario transaccional
+                    userId: usuario.userID
                 },
                 defaults: {
-                    // Datos a usar si el usuario NO existe y necesita ser creado
                     userID: usuario.userID,
                     email: usuario.email,
                     nombre: usuario.nombre,
                     apellido: usuario.apellido                    
-                    // Asegúrate que los nombres de las propiedades coincidan
                 }
             });
     if (fueCreado) {
@@ -31,8 +31,6 @@ async function procesarSeguimiento (seguimiento) {
             } else {
                 console.log(`Usuario encontrado en DimUsuario con ID (DW): ${dimUsuario.userID}`);
             }
-
-            // 3. Obtienes la clave primaria de DimUsuario (la que necesitas para la tabla de hechos)
             const idDimUsuario = dimUsuario.userID;
 
     const resp = await servicioEvento.obtenerEventosDeSeguimiento(seguimiento.dataValues.idSeguimiento);
@@ -47,34 +45,6 @@ async function procesarSeguimiento (seguimiento) {
 
     const idDimFecha = await etlFunciones.obtenerOCrearDimFecha(fechaDelSeguimiento);
     const idDimFechaIncial = await etlFunciones.obtenerOCrearDimFecha(fechaInicial);
-
-/*    const fechaCompleta = fechaDelSeguimiento.toISOString().split('T')[0];
-
-    const anio = fechaDelSeguimiento.getFullYear();
-    const mes = fechaDelSeguimiento.getMonth() + 1; // Recuerda sumar 1
-    const dia = fechaDelSeguimiento.getDate();
-
-    const [dimFecha, fueCreadaFecha] = await DimFecha.findOrCreate({
-        where: { 
-            // Busca por la fecha completa
-            fecha: fechaCompleta // Asegúrate que tu columna se llame 'fecha' en DimFecha
-        },
-        defaults: {
-            // Datos a usar si la fecha NO existe
-            fecha: fechaCompleta,
-            anio: anio,
-            mes: mes,
-            dia: dia
-            // ... otros atributos como nombreMes, diaSemana, etc.
-        }
-    });
-
-    if (fueCreadaFecha) {
-        console.log(`Nueva fecha creada en DimFecha: ${fechaCompleta}`);
-    }
-
-    // 4. Obtienes la clave primaria de DimFecha para la tabla de hechos
-    const idDimFecha = dimFecha.idFecha;*/
 
     const transportista = seguimiento.dataValues.transportista.dataValues;
 
@@ -122,22 +92,9 @@ async function procesarSeguimiento (seguimiento) {
     const idDimUbicacion = await etlFunciones.obtenerOCrearDimUbicacion(ubicacionActual);
     const idDimOrigen = await etlFunciones.obtenerOCrearDimUbicacion(origen);
 
-/*    const [dimUbicacion, fueCreadaUbicacion] = await DimUbicacion.findOrCreate({
-
-      where: {
-        nombre: ubicacion
-      },
-      defaults: {
-        nombre: ubicacion
-      }
-    });
-    if (fueCreadaUbicacion) {
-        console.log(`Nueva estado creado en DimEstado: ${ubicacion}`);
-    };
- 
-    const idDimUbicacion = dimUbicacion.idUbicacion;*/
     const detalle = seguimiento.dataValues.idDocumento_FK
     let idDimDetalle = null;
+    //Si el seguimiento tiene un documento cargado, tambien lo procesa en la dimension detalle
     if (detalle != null) {
 
       const doc = seguimiento.dataValues.documento.dataValues;
@@ -145,7 +102,7 @@ async function procesarSeguimiento (seguimiento) {
       idDimDetalle = doc.idDocumento;
       const via = doc.via;
       
-
+      // Se crean o cargan las dimesiones relaciones al detalle
       const [dimVia, fueCreadoVia] = await DimVia.findOrCreate({
         where: {
           via: via
@@ -235,9 +192,8 @@ async function procesarSeguimiento (seguimiento) {
 
 
       try{
-
+          //Se carga en la table dimDetalle
           const [registroD, creadoD] = await DimDetalle.upsert({
-            // Pasas TODOS los campos, incluyendo el identificador único
               idDetalle: idDimDetalle,
               idVendedor: idVendedor,
               idDespacho: idDespacho,
@@ -275,19 +231,19 @@ async function procesarSeguimiento (seguimiento) {
     }
 
     try{
-
+      //Se carga en la tabla de hechos
       const [registro, creado] = await FactSeguimiento.upsert({
-        // Pasas TODOS los campos, incluyendo el identificador único
+
         idSeguimiento: seguimiento.dataValues.idSeguimiento,
         userID: idDimUsuario,
         idTransportista: idDimTransportista,
-        idDetalle: idDimDetalle || null, // Si es opcional
+        idDetalle: idDimDetalle || null,
         nro_tracking: seguimiento.dataValues.nro_tracking,
-        descripcion: seguimiento.dataValues.descripcion, // Dimensión degenerada
-        idEstado: idDimEstado, // Asumiendo que obtienes el ID del estado final
+        descripcion: seguimiento.dataValues.descripcion, 
+        idEstado: idDimEstado, 
         idUbicacion: idDimUbicacion,
-        idOrigen: idDimOrigen, // Asumiendo que obtienes el ID de la ubicación final
-        idFecha: idDimFecha, // Asegúrate que esta sea la FK a DimFecha
+        idOrigen: idDimOrigen, 
+        idFecha: idDimFecha,
         idFechaInicial: idDimFechaIncial      
 
         }
@@ -308,32 +264,33 @@ async function procesarSeguimiento (seguimiento) {
 }
 
 const ejecutarEtl = async () =>{
-
+    
       const metadata = await EtlMetadata.findOne({ where: { nombreProceso: 'ETL_Seguimientos' } });
+      //Se obtiene la fecha y hor del ultimo etl procesado
       const ultimaFecha = metadata.ultimaEjecucionExitosa;
       const fechaInicioActual = new Date();
+      //Se obtienen todos los seguimientos mas nuevos que la ultimaFecha
       const seguimientos = await Seguimiento.findAll({
       where: {
           updatedAt: {
-          [Op.gt]: ultimaFecha // gt = Greater Than (mayor que)
+          [Op.gt]: ultimaFecha
           },
       },
       include: [
           {
               model: Usuario,
-              as: 'usuario', // Usa el alias definido en la asociación Seguimiento.belongsTo(Usuario)
-              required: true // Opcional: Asegura que solo traiga seguimientos que SÍ tengan un usuario asociado (INNER JOIN)
-                            // Si lo omites o pones false, hará un LEFT JOIN.
+              as: 'usuario', 
+              required: true 
           },
           {
               model: Transportista,
-              as: 'transportista', // Usa el alias definido en la asociación Seguimiento.belongsTo(Transportista)
-              required: true // Opcional: INNER JOIN vs LEFT JOIN
+              as: 'transportista',
+              required: true
           },
           {
               model: Documento,
-              as: 'documento', // Usa el alias definido en la asociación Seguimiento.belongsTo(Transportista)
-              required: false // Opcional: INNER JOIN vs LEFT JOIN
+              as: 'documento',
+              required: false
           }
         ] 
       
@@ -341,9 +298,8 @@ const ejecutarEtl = async () =>{
 
     if (seguimientos.length === 0) {
             console.log('No hay seguimientos modificados para procesar.');
-            // ... (actualiza metadata y termina) ...
             metadata.ultimaEjecucionExitosa = fechaInicioActual; 
-            await metadata.save(); // Guarda la nueva fecha
+            await metadata.save();
             return;
         }
 
@@ -357,7 +313,7 @@ const ejecutarEtl = async () =>{
 
       console.log('¡Todos los seguimientos se procesaron en el ETL!');
 
-      metadata.ultimaEjecucionExitosa = fechaInicioActual; // Actualiza la propiedad en el objeto
+      metadata.ultimaEjecucionExitosa = fechaInicioActual;
       await metadata.save();
 
 
@@ -369,7 +325,7 @@ const ejecutarEtl = async () =>{
     
 }
 
-//'0 * * * *'
+//Se programa el cron que ejecuta cada hora
 const cronEtl = () => {
   console.log('🕒 Programando la tarea de etl...');
   cron.schedule('0 * * * *', ejecutarEtl, {

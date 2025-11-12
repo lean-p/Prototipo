@@ -12,6 +12,7 @@ const verificarSeguimiento = async () => {
     console.log('Programando la tarea ');
     console.log(`[${new Date().toLocaleString('es-AR')}] Ejecutando cron para verificar seguimientos activos...`);
 
+    //Se obtienen todos los seguimientos que aun no fueron entregados/finalizados
     const seguimientos = await servicioSeguimiento.obtenerTodosLosSeguimientosActivos();
     
 
@@ -19,7 +20,7 @@ const verificarSeguimiento = async () => {
 
         const idSeguimiento = seguimiento.idSeguimiento
         const estado = seguimiento.estadoActual.toLowerCase();
-        const idTransportista = seguimiento.idTransportista_FK; // Asegúrate que el nombre de la FK sea correcto
+        const idTransportista = seguimiento.idTransportista_FK;
         const transportista = await Transportista.findByPk(idTransportista);
 
         if (estado != 'delivered'){
@@ -51,19 +52,16 @@ const verificarSeguimiento = async () => {
 
             const eventosValidos =  eventos.filter(e => e.fechaHora && typeof e.fechaHora.toISOString === 'function');
 
-//            const huellasExistentes = new Set(
-//                eventosValidos.map(e => new Date(e.fechaHora).toISOString() + e.descripcion)
-//            );
+            //Se crea una huella de comparacion para cada evento, compuesto por Fecha + Descripcion
+
             const huellasExistentes = new Set(
                 eventosValidos.map(e => {
-                    // Asumimos que la hora de la DB ya está en UTC, solo le falta la 'Z'
                     const fechaUTC = e.fechaHora.toISOString();
                     const descNorm = normalizarDescripcion(e.descripcion);
                     return fechaUTC + descNorm;
                 })
             );
             const eventosNuevos = eventosConsultados.filter(eventoApi => {
-                // La API ya viene con timezone, .toISOString() la convierte a UTC correctamente.
                 const fechaUTC = new Date(eventoApi.timestamp).toISOString();
                 const descNorm = normalizarDescripcion(eventoApi.description);
                 
@@ -72,16 +70,10 @@ const verificarSeguimiento = async () => {
                 // Si la huella NO está en el Set, es un evento nuevo.
                 return !huellasExistentes.has(huellaApi);
             });
-
-/*            const eventosNuevos = eventosConsultados.filter(eventoApi => {
-                const huellaApi = new Date(eventoApi.timestamp).toISOString() + eventoApi.description;
-                // Si la huella NO está en el Set, es un evento nuevo.
-                 return !huellasExistentes.has(huellaApi);
-            });*/
             console.log(eventosNuevos)
             if (eventosNuevos.length > 0) {
                 console.log(`✅ Se encontraron ${eventosNuevos.length} eventos nuevos para el tracking ${seguimiento.nro_tracking}`);
-
+                // Por cada evento nuevo se carga en la base de datos
                 for (const eventoNuevo of eventosNuevos) {
 
                 const eventoACargar = {
@@ -102,21 +94,20 @@ const verificarSeguimiento = async () => {
                 const eventoCargado= await Evento.create(eventoACargar);
 
                 console.log(`Se creo el evento "${eventoCargado.idEvento}".`)
-
+                // Se genera una alerta por cada evento nuevo
                 await Alerta.create({
-
-                    
-                    userID_FK: seguimiento.userID_FK, // El ID del dueño del seguimiento
+              
+                    userID_FK: seguimiento.userID_FK,
                     idEvento_FK: eventoCargado.idEvento,
                     fecha: new Date(),
                     leido: false,
                     texto: `Tu envío ${seguimiento.nro_tracking} tiene una nueva actualización: "${eventoNuevo.description}".`
                 });
-
+                //Se actualiza el seguimiento
                 await servicioSeguimiento.actualizarSeguimiento(idSeguimiento, eventoCargado);
             }
             } else {
-
+                //Curso de eventos demorados
                 if (seguimiento.notificacionInactividadEnviada === false) {
 
                     const ultimoEvento = await Evento.findOne({
@@ -125,15 +116,15 @@ const verificarSeguimiento = async () => {
                     });
 
                     if (ultimoEvento) {
-
+                        //Se calcula la fecha de la ultima actualizacion de un seguimiento
                         const ultimaFecha = ultimoEvento.fechaHora;
                         const fechaActual = new Date();
                         const diferenciaMs = fechaActual.getTime() - ultimaFecha.getTime();
                         const diferenciaDias = diferenciaMs / (1000 * 60 * 60 * 24);
-
+                        //Si es mayor a 2 dias, se alerta por inactividad en el seguimiento
                         if (diferenciaDias > 2) {
 
-                            console.log(`⚠️ ALERTA DE INACTIVIDAD para ${seguimiento.nro_tracking}`);
+                            console.log(`ALERTA DE INACTIVIDAD para ${seguimiento.nro_tracking}`);
 
                             await Alerta.create({
                                 idUsuario_FK: seguimiento.userID_FK,
@@ -155,7 +146,7 @@ const verificarSeguimiento = async () => {
 }
 
 
-//'0 9,12,15,18,21 * * *'
+//Se programa el cron en las horas 9,12,15,18,21
 const programarTarea = () => {
   console.log('🕒 Programando la tarea de verificación...');
   cron.schedule('0 9,12,15,18,21 * * *', verificarSeguimiento, {
