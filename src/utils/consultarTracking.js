@@ -1,3 +1,4 @@
+require('dotenv').config({ path: 'config.env' });
 exports.consultarTracking = async (nro_tracking, transportista) => {
 
     const username = '';
@@ -50,7 +51,6 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
                 headers: config.headers
             });
             const data = await response.json();
- 
             const shipmentsArray = data.shipments;
 
             if (!shipmentsArray || shipmentsArray.length === 0) {
@@ -81,6 +81,7 @@ exports.consultarTracking = async (nro_tracking, transportista) => {
             return eventoMapeado;
 
         } catch (error) {
+            console.log(error)
             throw new Error ('No se pueden mapear los datos de la respuesta')
         }
     }
