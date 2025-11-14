@@ -15,6 +15,26 @@ const verificarSeguimiento = async () => {
     //Se obtienen todos los seguimientos que aun no fueron entregados/finalizados
     const seguimientos = await servicioSeguimiento.obtenerTodosLosSeguimientosActivos();
     
+    const NOMBRES_FORMATEADOS = {
+        'fedex': 'FedEx',
+        'dhl': 'DHL',
+        'ups': 'UPS',
+        'dsv': 'DSV'
+        // ...puedes añadir todos los que necesites
+    };
+
+    const getNombreLimpio = (transportista) => {
+            
+            const nombre = transportista.nombre
+            if (!nombre) return 'N/A'; // Por si llega nulo
+
+            // Convierte el nombre de la API a minúscula (ej. "Fedex" -> "fedex")
+            const key = nombre.toLowerCase();
+            
+            // Busca en el diccionario. Si lo encuentra, devuelve el valor (ej. "FedEx").
+            // Si no, devuelve el nombre original.
+            return NOMBRES_FORMATEADOS[key] || nombre;
+        };
 
     for (const seguimiento of seguimientos) {
 
@@ -22,14 +42,16 @@ const verificarSeguimiento = async () => {
         const estado = seguimiento.estadoActual.toLowerCase();
         const idTransportista = seguimiento.idTransportista_FK;
         const transportista = await Transportista.findByPk(idTransportista);
+        
 
         if (estado != 'delivered'){
 
+            const nombreTransportista = getNombreLimpio(transportista);
             console.log(`Buscando actualizacion para el seguimiento: ${idSeguimiento}`);
             let respuesta;
             try {
                 console.log(`Consultando tracking numero: ${seguimiento.nro_tracking}`);
-                respuesta = await Tracking.consultarTracking(seguimiento.nro_tracking, transportista.codigo);
+                respuesta = await Tracking.consultarTracking(seguimiento.nro_tracking, nombreTransportista);
                           
             } catch (error) {
 
@@ -38,11 +60,7 @@ const verificarSeguimiento = async () => {
             };
 
             const eventosConsultados = respuesta.eventos;
-            console.log('Eventos consultados');
-            console.log(eventosConsultados);
             const respuestaSeguimiento = await servicioEvento.obtenerEventosDeSeguimiento(idSeguimiento);
-            console.log('Respuesta de seguimiento');
-            console.log(respuestaSeguimiento);
             const eventos = respuestaSeguimiento[0].eventos;
 
             function normalizarDescripcion(desc) {
@@ -61,7 +79,10 @@ const verificarSeguimiento = async () => {
                     return fechaUTC + descNorm;
                 })
             );
-            const eventosNuevos = eventosConsultados.filter(eventoApi => {
+            let eventosNuevos;
+            if (nombreTransportista === 'DHL') {
+
+                eventosNuevos = eventosConsultados.filter(eventoApi => {
                 const fechaUTC = new Date(eventoApi.timestamp).toISOString();
                 const descNorm = normalizarDescripcion(eventoApi.description);
                 
@@ -69,8 +90,22 @@ const verificarSeguimiento = async () => {
                 
                 // Si la huella NO está en el Set, es un evento nuevo.
                 return !huellasExistentes.has(huellaApi);
+            
             });
-            console.log(eventosNuevos)
+
+            } else if (nombreTransportista === 'FedEx')  {
+
+                eventosNuevos = eventosConsultados.filter(eventoApi => {
+                const fechaUTC = new Date(eventoApi.date).toISOString();
+                const descNorm = normalizarDescripcion(eventoApi.eventDescription);
+                
+                const huellaApi = fechaUTC + descNorm;
+                
+                // Si la huella NO está en el Set, es un evento nuevo.
+                return !huellasExistentes.has(huellaApi);
+            });
+            }
+            
             if (eventosNuevos.length > 0) {
                 console.log(`✅ Se encontraron ${eventosNuevos.length} eventos nuevos para el tracking ${seguimiento.nro_tracking}`);
                 // Por cada evento nuevo se carga en la base de datos
@@ -108,7 +143,7 @@ const verificarSeguimiento = async () => {
             }
             } else {
                 //Curso de eventos demorados
-                if (seguimiento.notificacionInactividadEnviada === false) {
+                if (!seguimiento.notificacionInactividadEnviada) {
 
                     const ultimoEvento = await Evento.findOne({
                         where: { idSeguimiento_FK: seguimiento.idSeguimiento },
@@ -127,13 +162,14 @@ const verificarSeguimiento = async () => {
                             console.log(`ALERTA DE INACTIVIDAD para ${seguimiento.nro_tracking}`);
 
                             await Alerta.create({
-                                idUsuario_FK: seguimiento.userID_FK,
+                                userID_FK: seguimiento.userID_FK,
                                 fecha: new Date(),
                                 leido: false,
                                 texto: `Tu envío ${seguimiento.nro_tracking} no tiene actualizaciones hace más de 2 días. Te recomendamos contactar al courier.`
                             });
 
-                            await Seguimiento.update({ notificacionInactividadEnviada: true });
+                            seguimiento.notificacionInactividadEnviada = true;
+                            await seguimiento.save();
 
                         };
                     }
@@ -147,9 +183,11 @@ const verificarSeguimiento = async () => {
 
 
 //Se programa el cron en las horas 9,12,15,18,21
+
+//'0 9,12,15,18,21 * * *'
 const programarTarea = () => {
   console.log('🕒 Programando la tarea de verificación...');
-  cron.schedule('0 9,12,15,18,21 * * *', verificarSeguimiento, {
+  cron.schedule('*/5 * * * *', verificarSeguimiento, {
     timezone: "America/Argentina/Buenos_Aires"
   });
 };

@@ -328,7 +328,7 @@ const ejecutarEtl = async () =>{
 //Se programa el cron que ejecuta cada hora
 const cronEtl = () => {
   console.log('🕒 Programando la tarea de etl...');
-  cron.schedule('0 * * * *', ejecutarEtl, {
+  cron.schedule('*/ * * * *', ejecutarEtl, {
     timezone: "America/Argentina/Buenos_Aires"
   });
 };
