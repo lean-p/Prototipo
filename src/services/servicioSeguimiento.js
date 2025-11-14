@@ -130,16 +130,38 @@ exports.registrarSeguimiento = async (datos) => {
 
                 for (const eventoApi of eventosApi) {
                     
+                    let paisCodigo = null;
+                    let ubicacionFormateada = 'Información pendiente';
+                    const descripcionEvento = eventoApi.eventDescription || 'Sin descripción';
+                    
+                    // Comprobamos si el evento es uno "inicial" o si no tiene datos de ubicación
+                    if (descripcionEvento.includes('Shipment information sent') || 
+                        descripcionEvento.includes('Label created') ||
+                        !eventoApi.scanLocation) 
+                    {
+                        // Si es un evento inicial, usamos un texto descriptivo, sino tendriamos el resultado undefined
+                        ubicacionFormateada = 'Información de envío recibida';
+                    } 
+                    else {
+                        
+                        paisCodigo = eventoApi.scanLocation.countryCode || null;
+                        const ciudad = eventoApi.scanLocation.city || '';
+                        const pais = eventoApi.scanLocation.countryName || '';
+                        
+                        if (ciudad || pais) {
+                            ubicacionFormateada = `${ciudad}${ciudad && pais ? ' - ' : ''}${pais}`.trim();
+                        }
+                    }
                     
                     await servicioEvento.crearEventoFinalizado(
                         seguimientoCreado.idSeguimiento,
                         eventoApi.date,
-                        eventoApi.scanLocation.countryCode,
+                        paisCodigo,
                         eventoApi.derivedStatus,
                         evento.origen,
                         evento.destino,
-                        eventoApi.eventDescription,
-                        eventoApi.scanLocation.city + ' - ' + eventoApi.scanLocation.countryName,
+                        descripcionEvento,
+                        ubicacionFormateada,
                         (eventoApi.derivedStatus === 'DL')
                     
                     );
